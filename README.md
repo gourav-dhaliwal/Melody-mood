@@ -23,7 +23,7 @@
 
 
 
-## 🚀 Features
+## Features
 
 ### Monika’s Features:
 1. Users can select their mood from a set of predefined options (e.g., Happy, Sad, Energetic).
