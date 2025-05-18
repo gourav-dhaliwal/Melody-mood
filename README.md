@@ -51,3 +51,5 @@
 2.Users can enable Sleep Mode that stops music after a set time.
 3.Users can discover a new song every day.
 4.Users can make their own favorite playlist.
+
+
