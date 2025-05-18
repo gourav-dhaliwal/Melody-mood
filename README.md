@@ -6,7 +6,7 @@
 - Monika Dhiman - 1296527
 - Vikrant Walia  - 1273988
 - Gurleen kaur   -  1276032
-
+- Ashok Palwa   -  1291939
 
 ##  Project Description
 **MelodyMood** is a mood-based music application that curates personalized playlists for users based on their current emotional state. Whether you're feeling happy, sad, relaxed, or energetic — MelodyMood delivers a tailored musical experience that matches your mood.
