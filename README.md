@@ -30,3 +30,10 @@
 2. Users can browse curated playlists that match their selected mood.
 3. Users can search for other people and follow them to access and listen to their playlists.
 4. Users can detect their mood using AI-powered camera analysis to get personalized playlist recommendations.
+
+
+## Gouravdeep's Features:
+1. Users can like playlists of the people they follow, which are saved in their Liked Playlists.
+2. Users can download songs for offline listening (premium feature).
+3. Users can like playlists from people they follow; these appear under the Liked Playlists section in their My Library page.
+4. Users can access a Notifications page to track interactions like playlist likes, new followers, and song downloads, keeping them updated on their activity and connections.
