@@ -43,4 +43,4 @@
 1. Users can change the app's theme by choosing from basic UI options such as Light, Dark, and Colorful. 
 2. Users can see their recently played songs and playlists, making it easy to go back and listen again.
 3. Users  can  share their favorite playlists or currently playing songs directly to social media platforms (like Instagram, Facebook, or Twitter).
-4. Users  can  rate playlists with stars or thumbs-up/thumbs-down to help improve future recommendations and add reviews.
+4.  user can  shuffle songs within a playlist or repeat the current playlist for more flexible listening.
