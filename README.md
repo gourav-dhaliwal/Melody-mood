@@ -44,3 +44,10 @@
 2. Users can see their recently played songs and playlists, making it easy to go back and listen again.
 3. Users  can  share their favorite playlists or currently playing songs directly to social media platforms (like Instagram, Facebook, or Twitter).
 4. User can  shuffle songs within a playlist or repeat the current playlist for more flexible listening.
+
+
+## Ashok's Features:
+1.Users can queue songs to play next or later, with drag-and-drop reordering.
+2.Users can enable Sleep Mode that stops music after a set time.
+3.Users can discover a new song every day.
+4.Users can make their own favorite playlist.
