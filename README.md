@@ -35,7 +35,7 @@
 ## Gouravdeep's Features:
 1. Users can like playlists of the people they follow, which are saved in their Liked Playlists.
 2. Users can download songs for offline listening (premium feature).
-3. Users can like playlists from people they follow; these appear under the Liked Playlists section in their My Library page.
+3. Users can add, edit, and manage their own playlists in their profile.
 4. Users can access a Notifications page to track interactions like playlist likes, new followers, and song downloads, keeping them updated on their activity and connections.
 
 
