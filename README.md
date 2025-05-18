@@ -37,3 +37,10 @@
 2. Users can download songs for offline listening (premium feature).
 3. Users can like playlists from people they follow; these appear under the Liked Playlists section in their My Library page.
 4. Users can access a Notifications page to track interactions like playlist likes, new followers, and song downloads, keeping them updated on their activity and connections.
+
+
+## Gurleen's Features:
+1. Users can change the app's theme by choosing from basic UI options such as Light, Dark, and Colorful. 
+2. Users can see their recently played songs and playlists, making it easy to go back and listen again.
+3. Users  can  share their favorite playlists or currently playing songs directly to social media platforms (like Instagram, Facebook, or Twitter).
+4. Users  can  rate playlists with stars or thumbs-up/thumbs-down to help improve future recommendations and add reviews.
