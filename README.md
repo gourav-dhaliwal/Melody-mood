@@ -47,9 +47,7 @@
 
 
 ## Ashok's Features:
-1.Users can create a Smart Queue by choosing which songs to play next or later, and easily rearrange them.
-2.Users can enable Sleep Mode that stops music after a set time.
-3.Users can discover a new song every day.
-4.Users can make their own favorite playlist.
+1. Users can enable Sleep Mode that stops music after a set time.
+2. Users can discover a new song every day.
 
 
