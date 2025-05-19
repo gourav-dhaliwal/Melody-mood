@@ -53,3 +53,7 @@
 2. Users can discover a new song every day.
 
 
+## Vikrant walia 
+1.Users have a splash screen that appears when they open the app
+2.Users can delete their song playback history and search history to maintain privacy and manage their data.
+3.Users must log in or sign up before accessing the app to ensure secure and personalized usage.
