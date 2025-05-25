@@ -51,6 +51,8 @@
 ## Ashok's Features:
 1. Users can enable Sleep Mode that stops music after a set time.
 2. Users can discover a new song every day.
+3. Users can mark favorite lyrics in a song to revisit or share them later.
+4. Users can rate songs with stars or emojis to better curate playlists.
 
 
 ## Vikrant walia 
