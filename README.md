@@ -49,7 +49,7 @@
 
 
 ## Ashok's Features:
-1. Users can add personal tags to songs (e.g., "study", "road trip", "workout") for better filtering.
+1. Users can add personal tags to songs (e.g., study, road trip, workout) for better filtering.
 2. Users can set music alarms so a selected song wakes them up.
 3. Users can discover a new song every day.
 4. Users can enable Sleep Mode that stops music after a set time.
