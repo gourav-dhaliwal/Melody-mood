@@ -6,7 +6,7 @@ import { NavigationContainer } from '@react-navigation/native';
 // Import screen components
 import HomePage from './HomePage';
 import Settings from './settings';
-import MoodDetector from './MoodDetector';
+import MoodJournal from './MoodJournal';
 import Playlists from './Playlists';
 import TrackListScreen from './screens/TrackListScreen';
 
@@ -59,7 +59,7 @@ const PlaylistsStack = () => (
 const AppNavigator = () => (
   <Tab.Navigator screenOptions={{ headerShown: false }}>
     <Tab.Screen name="Home" component={HomeStack} />
-    <Tab.Screen name="Mood Detector" component={MoodDetector} />
+    <Tab.Screen name="Mood journal" component={MoodJournal} />
     <Tab.Screen name="Playlists" component={PlaylistsStack} />
   </Tab.Navigator>
 );
