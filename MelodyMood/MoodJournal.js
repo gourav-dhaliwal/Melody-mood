@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   FlatList, 
   StyleSheet, 
-  Dimensions 
+  Dimensions, 
+  SafeAreaView
 } from 'react-native';
 import Sentiment from 'sentiment';
 
@@ -18,7 +19,17 @@ const moodRecommendations = {
   sad: ['Heartbreak Anthems', 'Melancholy Melodies', 'Blue Mood'],
   energetic: ['Workout Bangers', 'Party Time', 'Upbeat Energy'],
   relaxed: ['Lo-Fi Beats', 'Acoustic Chill', 'Wind-Down Vibes'],
+  angry: ['Anger Release', 'Power Rock', 'Aggressive Beats'],
   neutral: ['Popular Picks', 'Mixed Bag', 'Top Charts']
+};
+
+const keywords = {
+  happy: ['happy', 'joy', 'cheerful', 'excited', 'delighted', 'glad', 'content', 'pleased', 'smiling', 'laughing', 'grateful', 'blessed', 'ecstatic', 'thrilled', 'elated', 'euphoric', 'awesome', 'fantastic', 'wonderful'],
+  sad: ['sad', 'cry', 'tears', 'depressed', 'unhappy', 'melancholy', 'blue', 'gloomy', 'heartbroken', 'miserable', 'down', 'lonely', 'sorrow', 'grief', 'despair', 'hopeless', 'empty', 'forlorn'],
+  energetic: ['energetic', 'active', 'motivated', 'pumped', 'hyped', 'lively', 'powerful', 'determined', 'strong', 'inspired', 'driven', 'productive', 'enthusiastic', 'focused', 'alert'],
+  relaxed: ['relaxed', 'calm', 'peaceful', 'serene', 'chill', 'unwind', 'zen', 'tranquil', 'soothing', 'easygoing', 'restful', 'cozy', 'composed', 'quiet', 'balanced', 'laid-back', 'content'],
+  angry: ['angry', 'mad', 'furious', 'rage', 'irritated', 'annoyed', 'frustrated', 'upset', 'enraged', 'fuming', 'outraged', 'resentful', 'bitter', 'pissed', 'aggravated', 'exasperated', 'hostile'],
+  neutral: ['okay', 'meh', 'fine', 'neutral', 'alright', 'indifferent', 'nothing', 'unsure', 'blank', 'normal', 'balanced', 'even', 'stable', 'regular', 'typical'],
 };
 
 const MoodJournal = () => {
@@ -29,12 +40,26 @@ const MoodJournal = () => {
 
   const analyzeMood = () => {
     const result = sentiment.analyze(journal);
+    const score = result.score;
+    const tokens = result.tokens.map(token => token.toLowerCase());
+
     let detectedMood = 'neutral';
 
-    if (result.score > 2) detectedMood = 'happy';
-    else if (result.score < -2) detectedMood = 'sad';
-    else if (result.score > 0) detectedMood = 'energetic';
-    else if (result.score < 0) detectedMood = 'relaxed';
+    // Check keywords first
+    for (const moodKey in keywords) {
+      if (tokens.some(token => keywords[moodKey].includes(token))) {
+        detectedMood = moodKey;
+        break;
+      }
+    }
+
+    // If no keyword matched, fallback to sentiment score logic
+    if (detectedMood === 'neutral') {
+      if (score > 4) detectedMood = 'happy';
+      else if (score > 0) detectedMood = 'energetic';
+      else if (score < -4) detectedMood = 'sad';
+      else if (score < 0) detectedMood = 'relaxed';
+    }
 
     setMood(detectedMood);
     setRecommendations(moodRecommendations[detectedMood]);
@@ -46,68 +71,68 @@ const MoodJournal = () => {
     </View>
   );
 
-  // Compose a combined data array for FlatList:
-  // We'll pass recommendations as data if mood is detected, else empty array
   const data = recommendations;
 
   return (
-    <FlatList
-      data={data}
-      keyExtractor={(item) => item}
-      numColumns={2}
-      renderItem={renderRecommendationItem}
-      contentContainerStyle={styles.listContent}
-      columnWrapperStyle={styles.row}
-      ListHeaderComponent={
-        <>
-          <View style={styles.header}>
-            <Text style={styles.mainTitle}>✍️ Mood Journal</Text>
-            <Text style={styles.subtitle}>Express your feelings and discover matching playlists</Text>
-          </View>
-
-          <View style={styles.journalSection}>
-            <TextInput
-              style={styles.textInput}
-              multiline
-              placeholder="How are you feeling today?"
-              value={journal}
-              onChangeText={setJournal}
-            />
-            <TouchableOpacity style={styles.analyzeButton} onPress={analyzeMood}>
-              <Text style={styles.analyzeButtonText}>Analyze Mood</Text>
-            </TouchableOpacity>
-          </View>
-
-          {mood && (
-            <View style={styles.resultSection}>
-              <Text style={styles.resultText}>
-                Detected Mood: <Text style={styles.moodText}>{mood.charAt(0).toUpperCase() + mood.slice(1)}</Text>
-              </Text>
-              <Text style={styles.recommendationsTitle}>Recommended Playlists:</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <FlatList
+        data={data}
+        keyExtractor={(item) => item}
+        numColumns={2}
+        renderItem={renderRecommendationItem}
+        contentContainerStyle={styles.listContent}
+        columnWrapperStyle={styles.row}
+        ListHeaderComponent={
+          <>
+            <View style={styles.header}>
+              <Text style={styles.mainTitle}>✍️ Mood Journal</Text>
+              <Text style={styles.subtitle}>Express your feelings and discover matching playlists</Text>
             </View>
-          )}
-        </>
-      }
-      ListFooterComponent={
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Powered by Sentiment Analysis ✨</Text>
-        </View>
-      }
-    />
+
+            <View style={styles.journalSection}>
+              <TextInput
+                style={styles.textInput}
+                multiline
+                placeholder="How are you feeling today?"
+                value={journal}
+                onChangeText={setJournal}
+              />
+              <TouchableOpacity style={styles.analyzeButton} onPress={analyzeMood}>
+                <Text style={styles.analyzeButtonText}>Analyze Mood</Text>
+              </TouchableOpacity>
+            </View>
+
+            {mood && (
+              <View style={styles.resultSection}>
+                <Text style={styles.resultText}>
+                  Detected Mood: <Text style={styles.moodText}>{mood.charAt(0).toUpperCase() + mood.slice(1)}</Text>
+                </Text>
+                <Text style={styles.recommendationsTitle}>Recommended Playlists:</Text>
+              </View>
+            )}
+          </>
+        }
+        ListFooterComponent={
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Powered by Sentiment Analysis ✨</Text>
+          </View>
+        }
+      />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 30,
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
   header: {
-    paddingTop: 20,
+    paddingTop: 40,
     paddingHorizontal: 4,
     paddingBottom: 10,
     backgroundColor: '#fff',

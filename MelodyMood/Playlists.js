@@ -8,7 +8,8 @@ import {
   ActivityIndicator, 
   Image, 
   ScrollView,
-  Dimensions
+  Dimensions,
+  SafeAreaView
 } from 'react-native';
 import { fetchMoodPlaylists } from './utils/spotifyApi';
 
@@ -97,31 +98,39 @@ const Playlists = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1DB954" />
-        <Text style={styles.loadingText}>Loading mood playlists...</Text>
-        <Text style={styles.loadingSubText}>Discovering your perfect vibes ✨</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1DB954" />
+          <Text style={styles.loadingText}>Loading mood playlists...</Text>
+          <Text style={styles.loadingSubText}>Discovering your perfect vibes ✨</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.mainTitle}>🎵 Mood Playlists</Text>
-        <Text style={styles.subtitle}>Find the perfect soundtrack for your feelings</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.mainTitle}>🎵 Mood Playlists</Text>
+          <Text style={styles.subtitle}>Find the perfect soundtrack for your feelings</Text>
+        </View>
 
-      {moods.map(mood => renderMoodSection(mood))}
-      
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Powered by Spotify 🎶</Text>
-      </View>
-    </ScrollView>
+        {moods.map(mood => renderMoodSection(mood))}
+        
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Powered by Spotify 🎶</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
