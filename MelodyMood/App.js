@@ -9,6 +9,8 @@ import Settings from './settings';
 import MoodJournal from './MoodJournal';
 import Playlists from './Playlists';
 import TrackListScreen from './screens/TrackListScreen';
+import MoodSelector from './MoodSelector'; 
+
 
 // Create navigators
 const Tab = createBottomTabNavigator();
@@ -59,10 +61,13 @@ const PlaylistsStack = () => (
 const AppNavigator = () => (
   <Tab.Navigator screenOptions={{ headerShown: false }}>
     <Tab.Screen name="Home" component={HomeStack} />
+    <Tab.Screen name="Mood Selector" component={MoodSelector} /> 
     <Tab.Screen name="Mood journal" component={MoodJournal} />
     <Tab.Screen name="Playlists" component={PlaylistsStack} />
+    
   </Tab.Navigator>
 );
+
 
 // App Component
 const App = () => {
