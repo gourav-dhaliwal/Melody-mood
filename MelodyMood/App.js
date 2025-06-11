@@ -10,6 +10,7 @@ import MoodJournal from './MoodJournal';
 import Playlists from './Playlists';
 import TrackListScreen from './screens/TrackListScreen';
 import MoodSelector from './MoodSelector'; 
+import UserSearch from './UserSearch';
 
 
 // Create navigators
@@ -64,6 +65,8 @@ const AppNavigator = () => (
     <Tab.Screen name="Mood Selector" component={MoodSelector} /> 
     <Tab.Screen name="Mood journal" component={MoodJournal} />
     <Tab.Screen name="Playlists" component={PlaylistsStack} />
+    <Tab.Screen name="Community" component={UserSearch} />
+
     
   </Tab.Navigator>
 );
