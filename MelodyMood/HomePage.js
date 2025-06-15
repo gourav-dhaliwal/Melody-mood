@@ -49,23 +49,23 @@ const HomePage = () => {
     }
   };
 
-  const handleDownload = (artistId) => {
+ const handleDownload = (artistId) => {
   if (!downloadedSongs.includes(artistId)) {
     const updatedList = [...downloadedSongs, artistId];
     setDownloadedSongs(updatedList);
-    Alert.alert('Downloaded', 'Song has been marked as downloaded!');
+    // Alert.alert('Downloaded', 'Song has been marked as downloaded!');
 
-    // ✅ Navigate to DownloadedSongs screen and pass data
+    // Navigate to DownloadedSongs screen and pass data
     navigation.navigate('Downloaded', {
       downloadedSongs: updatedList,
       allArtists: results,
     });
-  } else {
-    Alert.alert('Already Downloaded', 'This song is already downloaded.');
-  }
 
+  }
+  // Always close the modal
   setModalVisible(false);
 };
+
 
 
   const renderItem = ({ item }) => (

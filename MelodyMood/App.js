@@ -33,7 +33,7 @@ const HomeStack = () => (
   <Stack.Screen 
   name="Downloaded" 
   component={DownloadedSongs} 
-  options={{ headerTitle: 'Downloaded Songs' }} 
+   options={{ headerTitle: 'Downloaded Songs' }} 
 />
 
   </Stack.Navigator>
