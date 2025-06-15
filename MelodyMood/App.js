@@ -4,6 +4,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { DownloadProvider } from './context/DownloadContext';
+
 // Import screen components
 import HomePage from './HomePage';
 import Settings from './settings';
@@ -30,12 +32,11 @@ const HomeStack = () => (
       component={Settings} 
       options={{ headerTitle: "Settings" }}
     />
-  <Stack.Screen 
-  name="Downloaded" 
-  component={DownloadedSongs} 
-   options={{ headerTitle: 'Downloaded Songs' }} 
-/>
-
+    <Stack.Screen 
+      name="Downloaded" 
+      component={DownloadedSongs} 
+      options={{ headerTitle: 'Downloaded Songs' }} 
+    />
   </Stack.Navigator>
 );
 
@@ -98,11 +99,13 @@ const AppNavigator = () => (
   </Tab.Navigator>
 );
 
-// App Component
+// Main App component
 const App = () => (
-  <NavigationContainer>
-    <AppNavigator />
-  </NavigationContainer>
+  <DownloadProvider>
+    <NavigationContainer>
+      <AppNavigator />
+    </NavigationContainer>
+  </DownloadProvider>
 );
 
 export default App;

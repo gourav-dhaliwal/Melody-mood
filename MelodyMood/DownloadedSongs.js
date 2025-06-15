@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { DownloadContext } from './context/DownloadContext'; // adjust path if needed
 
-const DownloadedSongs = ({ route }) => {
-  const downloadedSongs = route?.params?.downloadedSongs || [];
+const DownloadedSongs = () => {
+  const { downloadedSongs } = useContext(DownloadContext);
 
   const renderItem = ({ item }) => {
     if (!item) return null;

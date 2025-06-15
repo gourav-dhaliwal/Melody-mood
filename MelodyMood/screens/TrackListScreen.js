@@ -1,11 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Linking, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { fetchTracksFromPlaylist } from '../utils/spotifyApi.js';
+import { DownloadContext } from '../context/DownloadContext';  // import your context
 
 const TrackListScreen = ({ route }) => {
   const { playlistId, playlistName } = route.params;
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Get downloadSong function from context
+  const { downloadSong } = useContext(DownloadContext);
 
   useEffect(() => {
     const getTracks = async () => {
@@ -24,20 +28,32 @@ const TrackListScreen = ({ route }) => {
     }
   };
 
+  // Handle download button press
+  const handleDownloadPress = (track) => {
+    downloadSong(track);
+    alert(`"${track.name}" has been downloaded!`);
+  };
+
   const renderItem = ({ item }) => {
     const track = item.track;
     if (!track) return null;
 
     return (
-      <TouchableOpacity style={styles.trackItem} onPress={() => handleTrackPress(track)}>
-        {track.album && track.album.images.length > 0 && (
-          <Image source={{ uri: track.album.images[0].url }} style={styles.albumArt} />
-        )}
-        <View style={styles.trackInfo}>
-          <Text style={styles.trackName}>{track.name}</Text>
-          <Text style={styles.artistName}>{track.artists.map(a => a.name).join(', ')}</Text>
-        </View>
-      </TouchableOpacity>
+      <View style={styles.trackItem}>
+        <TouchableOpacity onPress={() => handleTrackPress(track)} style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
+          {track.album && track.album.images.length > 0 && (
+            <Image source={{ uri: track.album.images[0].url }} style={styles.albumArt} />
+          )}
+          <View style={styles.trackInfo}>
+            <Text style={styles.trackName}>{track.name}</Text>
+            <Text style={styles.artistName}>{track.artists.map(a => a.name).join(', ')}</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.downloadButton} onPress={() => handleDownloadPress(track)}>
+          <Text style={styles.downloadButtonText}>Download</Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -90,6 +106,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: '#ddd',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   albumArt: {
     width: 60,
@@ -109,6 +126,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  downloadButton: {
+    backgroundColor: '#1DB954',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    marginLeft: 12,
+  },
+  downloadButtonText: {
+    color: 'white',
+    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,

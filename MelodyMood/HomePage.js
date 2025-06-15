@@ -141,15 +141,27 @@ const HomePage = () => {
   onRequestClose={() => setModalVisible(false)}
 >
   <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-    <View style={styles.smallSidebarMenu}>
-      <TouchableOpacity
-        style={styles.modalOption}
-        onPress={() => handleDownload(selectedArtist?.id)}
-      >
-        <Text style={styles.modalText}>Download</Text>
-      </TouchableOpacity>
-      {/* Add other menu options here if needed */}
-    </View>
+  <View style={styles.smallSidebarMenu}>
+  {selectedArtist ? (
+    <TouchableOpacity
+      style={styles.modalOption}
+      onPress={() => handleDownload(selectedArtist.id)}
+    >
+      <Text style={styles.modalText}>Download</Text>
+    </TouchableOpacity>
+  ) : null}
+
+  <TouchableOpacity
+    style={styles.modalOption}
+    onPress={() => {
+      setModalVisible(false);
+      navigation.navigate('Downloaded'); // ← navigate to DownloadedSongs screen
+    }}
+  >
+    <Text style={styles.modalText}>My Downloads</Text>
+  </TouchableOpacity>
+</View>
+
   </Pressable>
 </Modal>
 
