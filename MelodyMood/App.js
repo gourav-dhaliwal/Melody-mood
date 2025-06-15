@@ -64,7 +64,7 @@ const AppNavigator = () => (
         if (route.name === 'Home') {
           iconName = focused ? 'home' : 'home-outline';
         } else if (route.name === 'Mood Selector') {
-          iconName = focused ? 'color-palette' : 'color-palette-outline';
+          iconName = focused ? 'happy' : 'happy-outline';
         } else if (route.name === 'Mood journal') {
           iconName = focused ? 'journal' : 'journal-outline';
         } else if (route.name === 'Playlists') {
