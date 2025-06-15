@@ -7,14 +7,25 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
+  Modal,
+  Pressable,
+  Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { searchArtist, followArtist } from './utils/spotifyApi';
-import { Ionicons } from '@expo/vector-icons'; // For 3-dot icon
+import { Ionicons } from '@expo/vector-icons';
+
+
 
 const HomePage = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [followedArtists, setFollowedArtists] = useState([]);
+  const [downloadedSongs, setDownloadedSongs] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedArtist, setSelectedArtist] = useState(null);
+  const navigation = useNavigation();
+
 
   const handleSearch = async () => {
     try {
@@ -38,6 +49,25 @@ const HomePage = () => {
     }
   };
 
+  const handleDownload = (artistId) => {
+  if (!downloadedSongs.includes(artistId)) {
+    const updatedList = [...downloadedSongs, artistId];
+    setDownloadedSongs(updatedList);
+    Alert.alert('Downloaded', 'Song has been marked as downloaded!');
+
+    // ✅ Navigate to DownloadedSongs screen and pass data
+    navigation.navigate('Downloaded', {
+      downloadedSongs: updatedList,
+      allArtists: results,
+    });
+  } else {
+    Alert.alert('Already Downloaded', 'This song is already downloaded.');
+  }
+
+  setModalVisible(false);
+};
+
+
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <Image
@@ -58,6 +88,15 @@ const HomePage = () => {
           </Text>
         </TouchableOpacity>
       </View>
+      <TouchableOpacity
+        style={styles.menuIcon}
+        onPress={() => {
+          setSelectedArtist(item);
+          setModalVisible(true);
+        }}
+      >
+        <Ionicons name="ellipsis-vertical" size={20} color="white" />
+      </TouchableOpacity>
     </View>
   );
 
@@ -66,9 +105,14 @@ const HomePage = () => {
       {/* App Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Melody Mood</Text>
-        <TouchableOpacity style={styles.menuIcon}>
-          <Ionicons name="ellipsis-vertical" size={24} color="white" />
-        </TouchableOpacity>
+   <TouchableOpacity
+  style={styles.menuIcon}
+  onPress={() => setModalVisible(true)}
+>
+  <Ionicons name="ellipsis-vertical" size={24} color="white" />
+</TouchableOpacity>
+
+
       </View>
 
       {/* Search Input */}
@@ -88,6 +132,28 @@ const HomePage = () => {
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 100 }}
       />
+
+      {/* Modal for Download Option */}
+    <Modal
+  visible={modalVisible}
+  transparent
+  animationType="fade"  // fade is smoother for small menus
+  onRequestClose={() => setModalVisible(false)}
+>
+  <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+    <View style={styles.smallSidebarMenu}>
+      <TouchableOpacity
+        style={styles.modalOption}
+        onPress={() => handleDownload(selectedArtist?.id)}
+      >
+        <Text style={styles.modalText}>Download</Text>
+      </TouchableOpacity>
+      {/* Add other menu options here if needed */}
+    </View>
+  </Pressable>
+</Modal>
+
+
     </View>
   );
 };
@@ -158,4 +224,44 @@ const styles = StyleSheet.create({
   unfollow: { backgroundColor: '#555' },
 
   btnText: { color: '#fff', fontWeight: 'bold' },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  modalContent: {
+    backgroundColor: '#333',
+    padding: 20,
+    borderRadius: 10,
+    width: 200,
+  },
+
+  modalOption: {
+    paddingVertical: 12,
+  },
+
+  modalText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  smallSidebarMenu: {
+  position: 'absolute',
+  top: 50,         // adjust as per header height or icon position
+  right: 16,       // small distance from right edge
+  width: 140,      // small menu width
+  backgroundColor: '#333',
+  borderRadius: 8,
+  paddingVertical: 10,
+  paddingHorizontal: 12,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.3,
+  shadowRadius: 4,
+  elevation: 5,
+  zIndex: 1000,
+},
+
 });

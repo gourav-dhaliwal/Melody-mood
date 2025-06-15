@@ -11,6 +11,7 @@ import MoodJournal from './MoodJournal';
 import Playlists from './Playlists';
 import TrackListScreen from './screens/TrackListScreen';
 import MoodSelector from './MoodSelector';
+import DownloadedSongs from './DownloadedSongs';
 
 // Create navigators
 const Tab = createBottomTabNavigator();
@@ -29,6 +30,12 @@ const HomeStack = () => (
       component={Settings} 
       options={{ headerTitle: "Settings" }}
     />
+  <Stack.Screen 
+  name="Downloaded" 
+  component={DownloadedSongs} 
+  options={{ headerTitle: 'Downloaded Songs' }} 
+/>
+
   </Stack.Navigator>
 );
 
