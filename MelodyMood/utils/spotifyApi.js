@@ -6,14 +6,14 @@ const clientSecret = 'd9d344d4f89947dfa826698d127ee783';
 let cachedToken = null;
 let tokenExpiry = null;
 
-const getAccessToken = async () => {
+export const getAccessToken = async () => {
   const now = Date.now();
   if (cachedToken && tokenExpiry && now < tokenExpiry) {
     return cachedToken;
   }
 
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-  
+
   try {
     const res = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
@@ -27,8 +27,7 @@ const getAccessToken = async () => {
     const json = await res.json();
     if (json.access_token) {
       cachedToken = json.access_token;
-      tokenExpiry = now + json.expires_in * 1000 - 60000; // expire 1 minute early for safety
-      console.log('ACCESS TOKEN:', cachedToken);
+      tokenExpiry = now + json.expires_in * 1000 - 60000;
       return cachedToken;
     } else {
       console.error('Failed to get access token:', json);
@@ -38,6 +37,31 @@ const getAccessToken = async () => {
     console.error('Error fetching Spotify token:', err);
     return null;
   }
+};
+
+export const searchArtist = async (artistName) => {
+  const token = await getAccessToken();
+  if (!token || !artistName) return [];
+
+  try {
+    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=10`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const json = await res.json();
+    return json.artists?.items || [];
+  } catch (error) {
+    console.error('Error searching for artist:', error);
+    return [];
+  }
+};
+
+// Fake follow for UI
+export const followArtist = async (artistId) => {
+  console.log(`Pretending to follow artist with ID: ${artistId}`);
+  return true;
 };
 
 export const fetchMoodPlaylists = async (mood) => {
@@ -52,15 +76,7 @@ export const fetchMoodPlaylists = async (mood) => {
     });
 
     const json = await res.json();
-    if (json.error) {
-      console.error('Spotify API error:', json.error);
-      return [];
-    }
-
-    console.log('Fetched Playlists:', json.playlists?.items);
-    // Filter out null/undefined items and return only valid playlists
-    const playlists = json.playlists?.items || [];
-    return playlists.filter(playlist => playlist !== null && playlist !== undefined);
+    return (json.playlists?.items || []).filter(Boolean);
   } catch (err) {
     console.error('Playlist fetch error:', err);
     return [];
