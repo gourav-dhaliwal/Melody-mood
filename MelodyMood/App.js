@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 // Import screen components
 import HomePage from './HomePage';
@@ -9,9 +10,7 @@ import Settings from './settings';
 import MoodJournal from './MoodJournal';
 import Playlists from './Playlists';
 import TrackListScreen from './screens/TrackListScreen';
-import MoodSelector from './MoodSelector'; 
-// import UserSearch from './UserSearch';
-
+import MoodSelector from './MoodSelector';
 
 // Create navigators
 const Tab = createBottomTabNavigator();
@@ -23,12 +22,12 @@ const HomeStack = () => (
     <Stack.Screen 
       name="HomePage" 
       component={HomePage} 
-      options={{ headerShown: false }} // No header for the Home screen
+      options={{ headerShown: false }}
     />
     <Stack.Screen 
       name="Settings" 
       component={Settings} 
-      options={{ headerTitle: "Settings" }} // Add a header for Settings screen
+      options={{ headerTitle: "Settings" }}
     />
   </Stack.Navigator>
 );
@@ -39,46 +38,64 @@ const PlaylistsStack = () => (
     <Stack.Screen 
       name="PlaylistsList" 
       component={Playlists} 
-      options={{ headerShown: false }} // No header for the main playlists screen
+      options={{ headerShown: false }}
     />
     <Stack.Screen 
       name="TrackList" 
       component={TrackListScreen} 
       options={{ 
         headerTitle: "Tracks",
-        headerStyle: {
-          backgroundColor: '#1DB954',
-        },
+        headerStyle: { backgroundColor: '#1DB954' },
         headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerTitleStyle: { fontWeight: 'bold' },
       }} 
     />
   </Stack.Navigator>
 );
 
-// Bottom Tab Navigator
+// Bottom Tab Navigator with icons
 const AppNavigator = () => (
-  <Tab.Navigator screenOptions={{ headerShown: false }}>
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      headerShown: false,
+      tabBarIcon: ({ focused, color, size }) => {
+        let iconName;
+
+        if (route.name === 'Home') {
+          iconName = focused ? 'home' : 'home-outline';
+        } else if (route.name === 'Mood Selector') {
+          iconName = focused ? 'color-palette' : 'color-palette-outline';
+        } else if (route.name === 'Mood journal') {
+          iconName = focused ? 'journal' : 'journal-outline';
+        } else if (route.name === 'Playlists') {
+          iconName = focused ? 'musical-notes' : 'musical-notes-outline';
+        }
+
+        return <Ionicons name={iconName} size={size} color={color} />;
+      },
+      tabBarActiveTintColor: '#1DB954',
+      tabBarInactiveTintColor: 'gray',
+      tabBarStyle: {
+        backgroundColor: '#121212',
+        borderTopColor: '#333',
+      },
+      tabBarLabelStyle: {
+        fontSize: 12,
+      },
+    })}
+  >
     <Tab.Screen name="Home" component={HomeStack} />
     <Tab.Screen name="Mood Selector" component={MoodSelector} /> 
     <Tab.Screen name="Mood journal" component={MoodJournal} />
     <Tab.Screen name="Playlists" component={PlaylistsStack} />
-    {/* <Tab.Screen name="Community" component={UserSearch} /> */}
-
-    
   </Tab.Navigator>
 );
 
-
 // App Component
-const App = () => {
-  return (
-    <NavigationContainer>
-      <AppNavigator />
-    </NavigationContainer>
-  );
-};
+const App = () => (
+  <NavigationContainer>
+    <AppNavigator />
+  </NavigationContainer>
+);
 
 export default App;
