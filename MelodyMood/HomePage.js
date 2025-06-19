@@ -1,4 +1,4 @@
-// HomePage.js (updated to use DownloadContext and fetch Spotify top track)
+
 import React, { useState, useContext } from 'react';
 import {
   View,
@@ -45,7 +45,6 @@ const HomePage = () => {
       console.error('Follow failed:', error);
     }
   };
-
 const handleDownload = async (artistId) => {
   const token = await getAccessToken();
 
@@ -62,14 +61,22 @@ const handleDownload = async (artistId) => {
       return;
     }
 
-    const songData = {
-      id: topTrack.id,
-      name: topTrack.name || 'Unknown Title',
-      artist: topTrack.artists?.[0]?.name || 'Unknown Artist',
-      duration: topTrack.duration_ms || 0,
-      image: topTrack.album?.images?.[0]?.url || 'https://via.placeholder.com/100',
-      url: topTrack.external_urls.spotify, // ✅ Must use this
-    };
+    console.log('🎧 Downloading track:', topTrack); 
+
+    const artistName = topTrack.artists && topTrack.artists.length > 0
+      ? topTrack.artists[0].name
+      : 'Unknown Artist';
+
+   const songData = {
+  id: topTrack.id,
+  name: topTrack.name || 'Unknown Title',
+  artist: topTrack.artists?.[0]?.name || 'Unknown Artist',
+  duration: typeof topTrack.duration_ms === 'number' ? topTrack.duration_ms : 0,
+  image: topTrack.album?.images?.[0]?.url || '',
+  url: topTrack?.external_urls?.spotify ?? '',
+  
+};
+
 
     downloadSong(songData);
     navigation.navigate('Downloaded');
@@ -81,6 +88,7 @@ const handleDownload = async (artistId) => {
 
   setModalVisible(false);
 };
+
 
 
 

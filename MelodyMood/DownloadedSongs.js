@@ -30,18 +30,23 @@ const DownloadedSongs = () => {
           source={{ uri: item.image || 'https://via.placeholder.com/100' }}
           style={styles.image}
         />
-        <View style={styles.details}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.artist}>Artist: {item.artist}</Text>
-          <Text style={styles.duration}>Duration: {formatDuration(item.duration)}</Text>
-        </View>
+       
+          <View style={styles.details}>
+  <Text style={styles.name}>{item.name}</Text>
+  <Text style={styles.artist}>Artist: {item.artist || 'Unknown Artist'}</Text>
+  <Text style={styles.duration}>Duration: {item.duration ? formatDuration(item.duration) : 'Unknown'}</Text>
+</View>
+
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Downloaded Songs</Text>
+      {/* <Text style={
+    styles.title}>Downloaded Songs</Text> */}
+    
+      
       {downloadedSongs.length === 0 ? (
         <Text style={styles.emptyText}>No songs downloaded yet.</Text>
       ) : (
@@ -73,6 +78,6 @@ const styles = StyleSheet.create({
   image: { width: 64, height: 64, borderRadius: 8, marginRight: 12 },
   details: { flex: 1 },
   name: { color: '#fff', fontSize: 18, fontWeight: '600' },
-  artist: { color: '#ccc', fontSize: 14, marginTop: 4 },
-  duration: { color: '#999', fontSize: 14, marginTop: 2 },
+   artist: { color: '#ccc', fontSize: 14, marginTop: 4 },   
+  duration: { color: '#999', fontSize: 14, marginTop: 2 }, 
 });
