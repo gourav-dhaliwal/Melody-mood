@@ -1,20 +1,41 @@
 import React, { useContext } from 'react';
-import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
-import { DownloadContext } from './context/DownloadContext'; // adjust path if needed
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { DownloadContext } from './context/DownloadContext';
+
+const formatDuration = (ms) => {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+};
 
 const DownloadedSongs = () => {
   const { downloadedSongs } = useContext(DownloadContext);
 
   const renderItem = ({ item }) => {
     if (!item) return null;
+
+    const handlePress = () => {
+      if (item.url && typeof item.url === 'string' && item.url.trim() !== '') {
+        Linking.openURL(item.url).catch(() => {
+          alert('Cannot open this URL.');
+        });
+      } else {
+        alert('No valid URL available for this song.');
+      }
+    };
+
     return (
-      <View style={styles.card}>
+      <TouchableOpacity style={styles.card} onPress={handlePress}>
         <Image
-          source={{ uri: item.images?.[0]?.url || 'https://via.placeholder.com/100' }}
+          source={{ uri: item.image || 'https://via.placeholder.com/100' }}
           style={styles.image}
         />
-        <Text style={styles.name}>{item.name}</Text>
-      </View>
+        <View style={styles.details}>
+          <Text style={styles.name}>{item.name}</Text>
+          <Text style={styles.artist}>Artist: {item.artist}</Text>
+          <Text style={styles.duration}>Duration: {formatDuration(item.duration)}</Text>
+        </View>
+      </TouchableOpacity>
     );
   };
 
@@ -49,6 +70,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginVertical: 8,
   },
-  image: { width: 64, height: 64, borderRadius: 32, marginRight: 12 },
+  image: { width: 64, height: 64, borderRadius: 8, marginRight: 12 },
+  details: { flex: 1 },
   name: { color: '#fff', fontSize: 18, fontWeight: '600' },
+  artist: { color: '#ccc', fontSize: 14, marginTop: 4 },
+  duration: { color: '#999', fontSize: 14, marginTop: 2 },
 });

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// HomePage.js (updated to use DownloadContext and fetch Spotify top track)
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -9,23 +10,20 @@ import {
   StyleSheet,
   Modal,
   Pressable,
-  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { searchArtist, followArtist } from './utils/spotifyApi';
+import { searchArtist, getAccessToken } from './utils/spotifyApi';
 import { Ionicons } from '@expo/vector-icons';
-
-
+import { DownloadContext } from './context/DownloadContext';
 
 const HomePage = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [followedArtists, setFollowedArtists] = useState([]);
-  const [downloadedSongs, setDownloadedSongs] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState(null);
   const navigation = useNavigation();
-
+  const { downloadSong } = useContext(DownloadContext);
 
   const handleSearch = async () => {
     try {
@@ -38,7 +36,6 @@ const HomePage = () => {
 
   const toggleFollow = async (artistId) => {
     try {
-      await followArtist(artistId);
       setFollowedArtists((prev) =>
         prev.includes(artistId)
           ? prev.filter((id) => id !== artistId)
@@ -49,20 +46,39 @@ const HomePage = () => {
     }
   };
 
- const handleDownload = (artistId) => {
-  if (!downloadedSongs.includes(artistId)) {
-    const updatedList = [...downloadedSongs, artistId];
-    setDownloadedSongs(updatedList);
-    // Alert.alert('Downloaded', 'Song has been marked as downloaded!');
+const handleDownload = async (artistId) => {
+  const token = await getAccessToken();
 
-    // Navigate to DownloadedSongs screen and pass data
-    navigation.navigate('Downloaded', {
-      downloadedSongs: updatedList,
-      allArtists: results,
+  try {
+    const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
 
+    const data = await res.json();
+    const topTrack = data.tracks?.[0];
+
+    if (!topTrack || !topTrack.external_urls?.spotify) {
+      alert('No valid track URL available');
+      return;
+    }
+
+    const songData = {
+      id: topTrack.id,
+      name: topTrack.name || 'Unknown Title',
+      artist: topTrack.artists?.[0]?.name || 'Unknown Artist',
+      duration: topTrack.duration_ms || 0,
+      image: topTrack.album?.images?.[0]?.url || 'https://via.placeholder.com/100',
+      url: topTrack.external_urls.spotify, // ✅ Must use this
+    };
+
+    downloadSong(songData);
+    navigation.navigate('Downloaded');
+
+  } catch (error) {
+    console.error('Download failed:', error);
+    alert('Failed to download song');
   }
-  // Always close the modal
+
   setModalVisible(false);
 };
 
@@ -77,15 +93,10 @@ const HomePage = () => {
       <View style={styles.details}>
         <Text style={styles.name}>{item.name}</Text>
         <TouchableOpacity
-          style={[
-            styles.followBtn,
-            followedArtists.includes(item.id) ? styles.unfollow : styles.follow,
-          ]}
+          style={[styles.followBtn, followedArtists.includes(item.id) ? styles.unfollow : styles.follow]}
           onPress={() => toggleFollow(item.id)}
         >
-          <Text style={styles.btnText}>
-            {followedArtists.includes(item.id) ? 'Unfollow' : 'Follow'}
-          </Text>
+          <Text style={styles.btnText}>{followedArtists.includes(item.id) ? 'Unfollow' : 'Follow'}</Text>
         </TouchableOpacity>
       </View>
       <TouchableOpacity
@@ -102,20 +113,19 @@ const HomePage = () => {
 
   return (
     <View style={styles.container}>
-      {/* App Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Melody Mood</Text>
-   <TouchableOpacity
-  style={styles.menuIcon}
-  onPress={() => setModalVisible(true)}
->
-  <Ionicons name="ellipsis-vertical" size={24} color="white" />
-</TouchableOpacity>
-
-
+        <TouchableOpacity
+          style={styles.menuIcon}
+          onPress={() => {
+            setSelectedArtist(null);
+            setModalVisible(true);
+          }}
+        >
+          <Ionicons name="ellipsis-vertical" size={24} color="white" />
+        </TouchableOpacity>
       </View>
 
-      {/* Search Input */}
       <TextInput
         placeholder="Search for an artist..."
         placeholderTextColor="#aaa"
@@ -125,7 +135,6 @@ const HomePage = () => {
         style={styles.input}
       />
 
-      {/* Artist List */}
       <FlatList
         data={results}
         keyExtractor={(item) => item.id}
@@ -133,39 +142,30 @@ const HomePage = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {/* Modal for Download Option */}
-    <Modal
-  visible={modalVisible}
-  transparent
-  animationType="fade"  // fade is smoother for small menus
-  onRequestClose={() => setModalVisible(false)}
->
-  <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-  <View style={styles.smallSidebarMenu}>
-  {selectedArtist ? (
-    <TouchableOpacity
-      style={styles.modalOption}
-      onPress={() => handleDownload(selectedArtist.id)}
-    >
-      <Text style={styles.modalText}>Download</Text>
-    </TouchableOpacity>
-  ) : null}
-
-  <TouchableOpacity
-    style={styles.modalOption}
-    onPress={() => {
-      setModalVisible(false);
-      navigation.navigate('Downloaded'); // ← navigate to DownloadedSongs screen
-    }}
-  >
-    <Text style={styles.modalText}>My Downloads</Text>
-  </TouchableOpacity>
-</View>
-
-  </Pressable>
-</Modal>
-
-
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+          <View style={styles.smallSidebarMenu}>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                if (selectedArtist) {
+                  handleDownload(selectedArtist.id);
+                } else {
+                  navigation.navigate('Downloaded');
+                }
+                setModalVisible(false);
+              }}
+            >
+              <Text style={styles.modalText}>Downloaded</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
@@ -174,7 +174,6 @@ export default HomePage;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1e1e1e', paddingHorizontal: 16 },
-
   header: {
     backgroundColor: '#1DB954',
     paddingTop: 50,
@@ -184,17 +183,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-
-  menuIcon: {
-    padding: 5,
-  },
-
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
+  menuIcon: { padding: 5 },
   input: {
     backgroundColor: '#2b2b2b',
     borderRadius: 8,
@@ -203,7 +193,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
-
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -212,18 +201,9 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
   },
-
-  image: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    marginRight: 12,
-  },
-
+  image: { width: 64, height: 64, borderRadius: 32, marginRight: 12 },
   details: { flex: 1 },
-
   name: { fontSize: 18, fontWeight: '600', color: '#fff' },
-
   followBtn: {
     marginTop: 8,
     paddingVertical: 8,
@@ -231,49 +211,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: 100,
   },
-
   follow: { backgroundColor: '#1DB954' },
   unfollow: { backgroundColor: '#555' },
-
   btnText: { color: '#fff', fontWeight: 'bold' },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-  modalContent: {
-    backgroundColor: '#333',
-    padding: 20,
-    borderRadius: 10,
-    width: 200,
-  },
-
-  modalOption: {
-    paddingVertical: 12,
-  },
-
-  modalText: {
-    color: 'white',
-    fontSize: 16,
-  },
+  modalOption: { paddingVertical: 12 },
+  modalText: { color: 'white', fontSize: 16 },
   smallSidebarMenu: {
-  position: 'absolute',
-  top: 50,         // adjust as per header height or icon position
-  right: 16,       // small distance from right edge
-  width: 140,      // small menu width
-  backgroundColor: '#333',
-  borderRadius: 8,
-  paddingVertical: 10,
-  paddingHorizontal: 12,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.3,
-  shadowRadius: 4,
-  elevation: 5,
-  zIndex: 1000,
-},
-
+    position: 'absolute',
+    top: 50,
+    right: 16,
+    width: 140,
+    backgroundColor: '#333',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 1000,
+  },
 });
