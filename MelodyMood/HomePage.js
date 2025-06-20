@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from 'react';
 import {
   View,
@@ -45,52 +44,41 @@ const HomePage = () => {
       console.error('Follow failed:', error);
     }
   };
-const handleDownload = async (artistId) => {
-  const token = await getAccessToken();
 
-  try {
-    const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  const handleDownload = async (artistId) => {
+    const token = await getAccessToken();
 
-    const data = await res.json();
-    const topTrack = data.tracks?.[0];
+    try {
+      const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (!topTrack || !topTrack.external_urls?.spotify) {
-      alert('No valid track URL available');
-      return;
+      const data = await res.json();
+      const topTrack = data.tracks?.[0];
+
+      if (!topTrack || !topTrack.external_urls?.spotify) {
+        alert('No valid track URL available');
+        return;
+      }
+
+      const songData = {
+        id: topTrack.id,
+        name: topTrack.name || 'Unknown Title',
+        artist: topTrack.artists?.[0]?.name || 'Unknown Artist',
+        duration: typeof topTrack.duration_ms === 'number' ? topTrack.duration_ms : 0,
+        image: topTrack.album?.images?.[0]?.url || '',
+        url: topTrack?.external_urls?.spotify ?? '',
+      };
+
+      downloadSong(songData);
+      navigation.navigate('Downloaded');
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download song');
     }
 
-    console.log('🎧 Downloading track:', topTrack); 
-
-    const artistName = topTrack.artists && topTrack.artists.length > 0
-      ? topTrack.artists[0].name
-      : 'Unknown Artist';
-
-   const songData = {
-  id: topTrack.id,
-  name: topTrack.name || 'Unknown Title',
-  artist: topTrack.artists?.[0]?.name || 'Unknown Artist',
-  duration: typeof topTrack.duration_ms === 'number' ? topTrack.duration_ms : 0,
-  image: topTrack.album?.images?.[0]?.url || '',
-  url: topTrack?.external_urls?.spotify ?? '',
-  
-};
-
-
-    downloadSong(songData);
-    navigation.navigate('Downloaded');
-
-  } catch (error) {
-    console.error('Download failed:', error);
-    alert('Failed to download song');
-  }
-
-  setModalVisible(false);
-};
-
-
-
+    setModalVisible(false);
+  };
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
@@ -158,18 +146,31 @@ const handleDownload = async (artistId) => {
       >
         <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
           <View style={styles.smallSidebarMenu}>
+            {selectedArtist && (
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={() => handleDownload(selectedArtist.id)}
+              >
+                <Text style={styles.modalText}>Download Top Track</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.modalOption}
               onPress={() => {
-                if (selectedArtist) {
-                  handleDownload(selectedArtist.id);
-                } else {
-                  navigation.navigate('Downloaded');
-                }
+                navigation.navigate('Downloaded');
                 setModalVisible(false);
               }}
             >
               <Text style={styles.modalText}>Downloaded</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                navigation.navigate('LikedPlaylists');
+                setModalVisible(false);
+              }}
+            >
+              <Text style={styles.modalText}>Liked Playlists</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -234,7 +235,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 50,
     right: 16,
-    width: 140,
+    width: 180,
     backgroundColor: '#333',
     borderRadius: 8,
     paddingVertical: 10,

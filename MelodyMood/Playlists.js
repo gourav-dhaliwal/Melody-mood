@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  TouchableOpacity, 
-  StyleSheet, 
-  ActivityIndicator, 
-  Image, 
+import React, { useState, useEffect, useContext } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Image,
   ScrollView,
   Dimensions,
   SafeAreaView
 } from 'react-native';
 import { fetchMoodPlaylists } from './utils/spotifyApi';
+import { LikedPlaylistsContext } from './context/LikedPlaylistsContext';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = (width - 48) / 2; // For 2 columns with margins
@@ -20,7 +21,8 @@ const Playlists = ({ navigation }) => {
   const [moodPlaylists, setMoodPlaylists] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // Define moods to display
+  const { likedPlaylists, toggleLike } = useContext(LikedPlaylistsContext);
+
   const moods = [
     { name: 'Happy', emoji: '😊', color: '#FFD700' },
     { name: 'Sad', emoji: '😢', color: '#87CEEB' },
@@ -39,10 +41,9 @@ const Playlists = ({ navigation }) => {
     const allPlaylists = {};
 
     try {
-      // Fetch playlists for each mood
       for (const mood of moods) {
         const playlists = await fetchMoodPlaylists(mood.name);
-        allPlaylists[mood.name] = playlists.slice(0, 6); // Limit to 6 playlists per mood
+        allPlaylists[mood.name] = playlists.slice(0, 6);
       }
       setMoodPlaylists(allPlaylists);
     } catch (error) {
@@ -52,28 +53,50 @@ const Playlists = ({ navigation }) => {
     }
   };
 
-  const renderPlaylistItem = ({ item, moodColor }) => (
-    <TouchableOpacity 
-      style={[styles.playlistCard, { borderLeftColor: moodColor }]}
-      onPress={() => navigation.navigate('TrackList', { 
-        playlistId: item.id, 
-        playlistName: item.name 
-      })}
-    >
-      <Image 
-        source={{ uri: item.images?.[0]?.url || 'https://via.placeholder.com/150' }} 
-        style={styles.playlistImage} 
-      />
-      <View style={styles.playlistInfo}>
-        <Text style={styles.playlistName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.trackCount}>{item.tracks?.total || 0} tracks</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderPlaylistItem = ({ item, moodColor }) => {
+    const isLiked = likedPlaylists.some(p => p.id === item.id);
+
+    return (
+      <TouchableOpacity
+        style={[styles.playlistCard, { borderLeftColor: moodColor }]}
+        onPress={() =>
+          navigation.navigate('TrackList', {
+            playlistId: item.id,
+            playlistName: item.name,
+          })
+        }
+      >
+        <Image
+          source={{ uri: item.images?.[0]?.url || 'https://via.placeholder.com/150' }}
+          style={styles.playlistImage}
+        />
+        <View style={styles.playlistInfo}>
+          <Text style={styles.playlistName} numberOfLines={2}>
+            {item.name}
+          </Text>
+          <Text style={styles.trackCount}>{item.tracks?.total || 0} tracks</Text>
+          <TouchableOpacity
+            style={styles.likeBtn}
+            onPress={() =>
+              toggleLike({
+                id: item.id,
+                name: item.name,
+                image: item.images?.[0]?.url || '',
+              })
+            }
+          >
+            <Text style={[styles.likeText, isLiked && { color: '#1DB954' }]}>
+              {isLiked ? '♥ Liked' : '♡ Like'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderMoodSection = (mood) => {
     const playlists = moodPlaylists[mood.name] || [];
-    
+
     if (playlists.length === 0) return null;
 
     return (
@@ -82,7 +105,7 @@ const Playlists = ({ navigation }) => {
           <Text style={styles.moodEmoji}>{mood.emoji}</Text>
           <Text style={styles.moodTitle}>{mood.name} Vibes</Text>
         </View>
-        
+
         <FlatList
           data={playlists}
           renderItem={({ item }) => renderPlaylistItem({ item, moodColor: mood.color })}
@@ -116,8 +139,8 @@ const Playlists = ({ navigation }) => {
           <Text style={styles.subtitle}>Find the perfect soundtrack for your feelings</Text>
         </View>
 
-        {moods.map(mood => renderMoodSection(mood))}
-        
+        {moods.map((mood) => renderMoodSection(mood))}
+
         <View style={styles.footer}>
           <Text style={styles.footerText}>Powered by Spotify 🎶</Text>
         </View>
@@ -247,6 +270,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#7f8c8d',
     fontWeight: '500',
+  },
+  likeBtn: {
+    marginTop: 4,
+  },
+  likeText: {
+    fontSize: 14,
+    color: '#999',
   },
   footer: {
     paddingVertical: 30,
