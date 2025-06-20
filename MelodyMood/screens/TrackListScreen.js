@@ -29,10 +29,20 @@ const TrackListScreen = ({ route }) => {
   };
 
   // Handle download button press
-  const handleDownloadPress = (track) => {
-    downloadSong(track);
-    alert(`"${track.name}" has been downloaded!`);
+const handleDownloadPress = (track) => {
+  const song = {
+    id: track.id,
+    name: track.name || 'Unknown Title',
+    artist: track.artists?.[0]?.name || 'Unknown Artist',
+    duration: track.duration_ms || 0,
+    image: track.album?.images?.[0]?.url || '',
+    url: track.external_urls?.spotify || '',
   };
+
+  downloadSong(song);
+alert(`"${track.name}" has been saved to your library.`);
+};
+
 
   const renderItem = ({ item }) => {
     const track = item.track;
@@ -51,7 +61,7 @@ const TrackListScreen = ({ route }) => {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.downloadButton} onPress={() => handleDownloadPress(track)}>
-          <Text style={styles.downloadButtonText}>Download</Text>
+<Text style={styles.downloadButtonText}>Saved to Library</Text>
         </TouchableOpacity>
       </View>
     );

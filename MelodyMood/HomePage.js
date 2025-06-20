@@ -71,7 +71,7 @@ const HomePage = () => {
       };
 
       downloadSong(songData);
-      navigation.navigate('Downloaded');
+      navigation.navigate('Saved');
     } catch (error) {
       console.error('Download failed:', error);
       alert('Failed to download song');
@@ -161,7 +161,7 @@ const HomePage = () => {
                 setModalVisible(false);
               }}
             >
-              <Text style={styles.modalText}>Downloaded</Text>
+              <Text style={styles.modalText}>Save to Library</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.modalOption}

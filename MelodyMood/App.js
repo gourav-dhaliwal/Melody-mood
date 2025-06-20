@@ -37,7 +37,7 @@ const HomeStack = () => (
     <Stack.Screen 
       name="Downloaded" 
       component={DownloadedSongs} 
-      options={{ headerTitle: 'Downloaded Songs' }} 
+      options={{ headerTitle: 'saved songs' }} 
     />
     <Stack.Screen 
       name="LikedPlaylists" 

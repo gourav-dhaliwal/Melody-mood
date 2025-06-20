@@ -8,8 +8,8 @@ const formatDuration = (ms) => {
   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 };
 
-const DownloadedSongs = () => {
-  const { downloadedSongs } = useContext(DownloadContext);
+const SavedSongs = () => {
+  const { downloadedSongs } = useContext(DownloadContext); // you may want to rename this in context too
 
   const renderItem = ({ item }) => {
     if (!item) return null;
@@ -30,29 +30,23 @@ const DownloadedSongs = () => {
           source={{ uri: item.image || 'https://via.placeholder.com/100' }}
           style={styles.image}
         />
-       
-          <View style={styles.details}>
-  <Text style={styles.name}>{item.name}</Text>
-  <Text style={styles.artist}>Artist: {item.artist || 'Unknown Artist'}</Text>
-  <Text style={styles.duration}>Duration: {item.duration ? formatDuration(item.duration) : 'Unknown'}</Text>
-</View>
-
+        <View style={styles.details}>
+          <Text style={styles.name}>{item.name}</Text>
+          <Text style={styles.artist}>Artist: {item.artist || 'Unknown Artist'}</Text>
+          <Text style={styles.duration}>Duration: {item.duration ? formatDuration(item.duration) : 'Unknown'}</Text>
+        </View>
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      {/* <Text style={
-    styles.title}>Downloaded Songs</Text> */}
-    
-      
       {downloadedSongs.length === 0 ? (
-        <Text style={styles.emptyText}>No songs downloaded yet.</Text>
+        <Text style={styles.emptyText}>No songs saved yet.</Text>
       ) : (
         <FlatList
           data={downloadedSongs}
-          keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
+          keyExtractor={(item, index) => `${item?.id || 'no-id'}-${index}`}
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: 100 }}
         />
@@ -61,11 +55,10 @@ const DownloadedSongs = () => {
   );
 };
 
-export default DownloadedSongs;
+export default SavedSongs;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1e1e1e', padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#1DB954', marginBottom: 20 },
   emptyText: { color: '#aaa', fontSize: 16, textAlign: 'center', marginTop: 50 },
   card: {
     flexDirection: 'row',
@@ -78,6 +71,6 @@ const styles = StyleSheet.create({
   image: { width: 64, height: 64, borderRadius: 8, marginRight: 12 },
   details: { flex: 1 },
   name: { color: '#fff', fontSize: 18, fontWeight: '600' },
-   artist: { color: '#ccc', fontSize: 14, marginTop: 4 },   
-  duration: { color: '#999', fontSize: 14, marginTop: 2 }, 
+  artist: { color: '#ccc', fontSize: 14, marginTop: 4 },
+  duration: { color: '#999', fontSize: 14, marginTop: 2 },
 });
