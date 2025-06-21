@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { fetchMoodPlaylists } from './utils/spotifyApi';
 import { LikedPlaylistsContext } from './context/LikedPlaylistsContext';
+import { NotificationContext } from './context/NotificationContext';
+
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = (width - 48) / 2; // For 2 columns with margins
@@ -22,6 +24,8 @@ const Playlists = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
 
   const { likedPlaylists, toggleLike } = useContext(LikedPlaylistsContext);
+  const { addNotification } = useContext(NotificationContext);
+
 
   const moods = [
     { name: 'Happy', emoji: '😊', color: '#FFD700' },
@@ -76,19 +80,27 @@ const Playlists = ({ navigation }) => {
           </Text>
           <Text style={styles.trackCount}>{item.tracks?.total || 0} tracks</Text>
           <TouchableOpacity
-            style={styles.likeBtn}
-            onPress={() =>
-              toggleLike({
-                id: item.id,
-                name: item.name,
-                image: item.images?.[0]?.url || '',
-              })
-            }
-          >
-            <Text style={[styles.likeText, isLiked && { color: '#1DB954' }]}>
-              {isLiked ? '♥ Liked' : '♡ Like'}
-            </Text>
-          </TouchableOpacity>
+  style={styles.likeBtn}
+  onPress={() => {
+    toggleLike({
+      id: item.id,
+      name: item.name,
+      image: item.images?.[0]?.url || '',
+    });
+
+    const isLiked = likedPlaylists.some(p => p.id === item.id);
+    if (!isLiked) {
+      addNotification(`You liked the playlist "${item.name}"`);
+    } else {
+      addNotification(`You unliked the playlist "${item.name}"`);
+    }
+  }}
+>
+  <Text style={[styles.likeText, isLiked && { color: '#1DB954' }]}>
+    {isLiked ? '♥ Liked' : '♡ Like'}
+  </Text>
+</TouchableOpacity>
+
         </View>
       </TouchableOpacity>
     );

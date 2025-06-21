@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { DownloadProvider } from './context/DownloadContext';
 import { LikedPlaylistsProvider } from './context/LikedPlaylistsContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 import HomePage from './HomePage';
 import Settings from './settings';
@@ -16,6 +17,8 @@ import TrackListScreen from './screens/TrackListScreen';
 import MoodSelector from './MoodSelector';
 import DownloadedSongs from './DownloadedSongs';
 import LikedPlaylistsScreen from './LikedPlaylistsScreen';
+import Notifications from './Notifications';
+
 
 // Create navigators
 
@@ -24,45 +27,49 @@ const Stack = createStackNavigator();
 
 const HomeStack = () => (
   <Stack.Navigator initialRouteName="HomePage">
-    <Stack.Screen 
-      name="HomePage" 
-      component={HomePage} 
-      options={{ headerShown: false }} 
+    <Stack.Screen
+      name="HomePage"
+      component={HomePage}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="Settings"
+      component={Settings}
+      options={{ headerTitle: 'Settings' }}
+    />
+    <Stack.Screen
+      name="Downloaded"
+      component={DownloadedSongs}
+      options={{ headerTitle: 'saved songs' }}
+    />
+    <Stack.Screen
+      name="LikedPlaylists"
+      component={LikedPlaylistsScreen}
+      options={{ headerTitle: 'Liked Playlists' }}
     />
     <Stack.Screen 
-      name="Settings" 
-      component={Settings} 
-      options={{ headerTitle: 'Settings' }} 
-    />
-    <Stack.Screen 
-      name="Downloaded" 
-      component={DownloadedSongs} 
-      options={{ headerTitle: 'saved songs' }} 
-    />
-    <Stack.Screen 
-      name="LikedPlaylists" 
-      component={LikedPlaylistsScreen} 
-      options={{ headerTitle: 'Liked Playlists' }} 
-    />
+      name="Notifications"
+      component={Notifications}
+      options={{ headerTitle: 'Notifications' }} />
   </Stack.Navigator>
 );
 
 const PlaylistsStack = () => (
   <Stack.Navigator initialRouteName="PlaylistsList">
-    <Stack.Screen 
-      name="PlaylistsList" 
-      component={Playlists} 
-      options={{ headerShown: false }} 
+    <Stack.Screen
+      name="PlaylistsList"
+      component={Playlists}
+      options={{ headerShown: false }}
     />
-    <Stack.Screen 
-      name="TrackList" 
-      component={TrackListScreen} 
-      options={{ 
+    <Stack.Screen
+      name="TrackList"
+      component={TrackListScreen}
+      options={{
         headerTitle: 'Tracks',
         headerStyle: { backgroundColor: '#1DB954' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: 'bold' },
-      }} 
+      }}
     />
   </Stack.Navigator>
 );
@@ -83,7 +90,7 @@ const AppNavigator = () => (
       tabBarActiveTintColor: '#1DB954',
       tabBarInactiveTintColor: 'gray',
       tabBarStyle: {
-        backgroundColor: '#121212',
+        backgroundColor: '#fff',
         borderTopColor: '#333',
       },
       tabBarLabelStyle: { fontSize: 12 },
@@ -96,12 +103,15 @@ const AppNavigator = () => (
   </Tab.Navigator>
 );
 
+
 const App = () => (
   <DownloadProvider>
     <LikedPlaylistsProvider>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
+      <NotificationProvider>
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+      </NotificationProvider>
     </LikedPlaylistsProvider>
   </DownloadProvider>
 );
