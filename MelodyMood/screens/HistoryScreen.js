@@ -73,12 +73,13 @@ export default function HistoryScreen({ navigation }) {
           </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => <View style={styles.divider} />}
-        ListEmptyComponent={
+        ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <Ionicons name="time-outline" size={48} color={COLORS.subtext} />
+            <Ionicons name="time-outline" size={48} color={COLORS?.subtext || '#999'} />
             <Text style={styles.emptyText}>No recent activity</Text>
           </View>
-        }
+        )}
+        
       />
     </View>
   );

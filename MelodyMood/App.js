@@ -135,7 +135,7 @@ const App = () => (
   <DownloadProvider>
     <LikedPlaylistsProvider>
       <NotificationProvider>
-        <HistoryProvider> {/* New provider wrapper */}
+        <HistoryProvider> 
           <NavigationContainer>
             <AppNavigator />
           </NavigationContainer>
