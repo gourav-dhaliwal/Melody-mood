@@ -27,7 +27,8 @@
     "react-native-screens": "^4.11.1",
     "react-native-vector-icons": "^10.2.0",
     "sentiment": "^5.0.2",
-    "expo-av": "~15.1.6"
+    "expo-av": "~15.1.6",
+    "@react-native-async-storage/async-storage": "2.1.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
