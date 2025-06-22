@@ -15,9 +15,8 @@ import { fetchMoodPlaylists } from './utils/spotifyApi';
 import { LikedPlaylistsContext } from './context/LikedPlaylistsContext';
 import { NotificationContext } from './context/NotificationContext';
 
-
 const { width } = Dimensions.get('window');
-const ITEM_WIDTH = (width - 48) / 2; // For 2 columns with margins
+const ITEM_WIDTH = (width - 48) / 2;
 
 const Playlists = ({ navigation }) => {
   const [moodPlaylists, setMoodPlaylists] = useState({});
@@ -25,7 +24,6 @@ const Playlists = ({ navigation }) => {
 
   const { likedPlaylists, toggleLike } = useContext(LikedPlaylistsContext);
   const { addNotification } = useContext(NotificationContext);
-
 
   const moods = [
     { name: 'Happy', emoji: '😊', color: '#FFD700' },
@@ -80,27 +78,26 @@ const Playlists = ({ navigation }) => {
           </Text>
           <Text style={styles.trackCount}>{item.tracks?.total || 0} tracks</Text>
           <TouchableOpacity
-  style={styles.likeBtn}
-  onPress={() => {
-    toggleLike({
-      id: item.id,
-      name: item.name,
-      image: item.images?.[0]?.url || '',
-    });
+            style={styles.likeBtn}
+            onPress={() => {
+              toggleLike({
+                id: item.id,
+                name: item.name,
+                image: item.images?.[0]?.url || '',
+              });
 
-    const isLiked = likedPlaylists.some(p => p.id === item.id);
-    if (!isLiked) {
-      addNotification(`You liked the playlist "${item.name}"`);
-    } else {
-      addNotification(`You unliked the playlist "${item.name}"`);
-    }
-  }}
->
-  <Text style={[styles.likeText, isLiked && { color: '#1DB954' }]}>
-    {isLiked ? '♥ Liked' : '♡ Like'}
-  </Text>
-</TouchableOpacity>
-
+              const isLiked = likedPlaylists.some(p => p.id === item.id);
+              if (!isLiked) {
+                addNotification(`You liked the playlist "${item.name}"`);
+              } else {
+                addNotification(`You unliked the playlist "${item.name}"`);
+              }
+            }}
+          >
+            <Text style={[styles.likeText, isLiked && { color: '#1DB954' }]}>
+              {isLiked ? '♥ Liked' : '♡ Like'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </TouchableOpacity>
     );
@@ -149,6 +146,13 @@ const Playlists = ({ navigation }) => {
         <View style={styles.header}>
           <Text style={styles.mainTitle}>🎵 Mood Playlists</Text>
           <Text style={styles.subtitle}>Find the perfect soundtrack for your feelings</Text>
+          
+          <TouchableOpacity 
+            style={styles.manageButton}
+            onPress={() => navigation.navigate('ManagePlaylists')}
+          >
+            <Text style={styles.manageButtonText}>Manage My Playlists</Text>
+          </TouchableOpacity>
         </View>
 
         {moods.map((mood) => renderMoodSection(mood))}
@@ -195,6 +199,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#7f8c8d',
     marginBottom: 10,
+  },
+  manageButton: {
+    backgroundColor: '#1DB954',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    marginTop: 15,
+    marginBottom: 10,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  manageButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   loadingContainer: {
     flex: 1,

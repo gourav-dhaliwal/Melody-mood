@@ -1,4 +1,3 @@
-// App.js
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -18,10 +17,9 @@ import MoodSelector from './MoodSelector';
 import DownloadedSongs from './DownloadedSongs';
 import LikedPlaylistsScreen from './LikedPlaylistsScreen';
 import Notifications from './Notifications';
-
+import ManagePlaylists from './ManagePlaylists'; // Add this import
 
 // Create navigators
-
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
@@ -40,7 +38,7 @@ const HomeStack = () => (
     <Stack.Screen
       name="Downloaded"
       component={DownloadedSongs}
-      options={{ headerTitle: 'saved songs' }}
+      options={{ headerTitle: 'Saved Songs' }}
     />
     <Stack.Screen
       name="LikedPlaylists"
@@ -66,6 +64,16 @@ const PlaylistsStack = () => (
       component={TrackListScreen}
       options={{
         headerTitle: 'Tracks',
+        headerStyle: { backgroundColor: '#1DB954' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+      }}
+    />
+    <Stack.Screen
+      name="ManagePlaylists"
+      component={ManagePlaylists}
+      options={{
+        headerTitle: 'Manage Playlists',
         headerStyle: { backgroundColor: '#1DB954' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: 'bold' },
@@ -102,7 +110,6 @@ const AppNavigator = () => (
     <Tab.Screen name="Playlists" component={PlaylistsStack} />
   </Tab.Navigator>
 );
-
 
 const App = () => (
   <DownloadProvider>
