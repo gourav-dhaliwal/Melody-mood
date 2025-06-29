@@ -3,23 +3,21 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native
 import { Ionicons } from '@expo/vector-icons';
 import { useHistory } from '../context/HistoryContext';
 
-// Color constants for light theme
 const COLORS = {
-  primary: '#1DB954',    // Spotify green
-  song: '#FF9F43',       // Vibrant orange
-  playlist: '#4BC0C8',   // Cool teal
-  text: '#000000',       // Black text
-  subtext: '#666666',    // Dark gray
-  background: '#FFFFFF', // White background
-  card: '#F8F8F8',       // Light gray cards
-  divider: '#E0E0E0'     // Light divider
+  primary: '#1DB954',
+  song: '#FF9F43',
+  playlist: '#4BC0C8',
+  text: '#000000',
+  subtext: '#666666',
+  background: '#FFFFFF',
+  card: '#F8F8F8',
+  divider: '#E0E0E0'
 };
 
 export default function HistoryScreen({ navigation }) {
   const { history } = useHistory();
 
-  // Unique key generator combining id, timestamp and index as fallback
-  const keyExtractor = (item, index) => 
+  const keyExtractor = (item, index) =>
     `${item.id}-${item.timestamp}-${index}`;
 
   const getItemColor = (type) => type === 'song' ? COLORS.song : COLORS.playlist;
@@ -27,59 +25,60 @@ export default function HistoryScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Listening History</Text>
-      
+
       <FlatList
         data={history}
         keyExtractor={keyExtractor}
         renderItem={({ item }) => (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
               styles.item,
-              { 
-                borderLeftWidth: 4, 
+              {
+                borderLeftWidth: 4,
                 borderLeftColor: getItemColor(item.type),
                 marginBottom: 8
               }
             ]}
-            onPress={() => navigation.navigate('TrackList', { 
+            onPress={() => navigation.navigate('TrackList', {
               playlistId: item.id,
               playlistName: item.name
             })}
           >
-            <Ionicons 
-              name={item.type === 'song' ? 'musical-notes' : 'list'} 
-              size={20} 
-              color={getItemColor(item.type)} 
+            <Ionicons
+              name={item.type === 'song' ? 'musical-notes' : 'list'}
+              size={20}
+              color={getItemColor(item.type)}
               style={styles.icon}
             />
             <View style={styles.textContainer}>
               <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
               <View style={styles.details}>
-                <Text style={styles.detailText}>{item.type === 'song' ? 'Song' : 'Playlist'}</Text>
+                <Text style={styles.detailText}>
+                  {item.type === 'song' ? 'Song' : 'Playlist'}
+                </Text>
                 <Text style={styles.dot}> • </Text>
                 <Text style={styles.detailText}>
-                  {new Date(item.timestamp).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
+                  {new Date(item.timestamp).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
                   })}
                 </Text>
               </View>
             </View>
-            <Ionicons 
-              name="chevron-forward" 
-              size={18} 
-              color={COLORS.subtext} 
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={COLORS.subtext}
             />
           </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => <View style={styles.divider} />}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <Ionicons name="time-outline" size={48} color={COLORS?.subtext || '#999'} />
+            <Ionicons name="time-outline" size={48} color={COLORS.subtext} />
             <Text style={styles.emptyText}>No recent activity</Text>
           </View>
         )}
-        
       />
     </View>
   );
@@ -106,8 +105,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    elevation: 1, // subtle shadow on Android
-    shadowColor: '#000', // subtle shadow on iOS
+    elevation: 1,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,

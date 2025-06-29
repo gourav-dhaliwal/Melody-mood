@@ -9,6 +9,7 @@ import { DownloadProvider } from './context/DownloadContext';
 import { LikedPlaylistsProvider } from './context/LikedPlaylistsContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { HistoryProvider } from './context/HistoryContext'; // ✅ History Context
 
 import SignupScreen from './screens/SignupScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -22,6 +23,7 @@ import MoodSelector from './MoodSelector';
 import DownloadedSongs from './DownloadedSongs';
 import LikedPlaylistsScreen from './LikedPlaylistsScreen';
 import Notifications from './Notifications';
+import HistoryScreen from './screens/HistoryScreen'; // ✅ Import History Screen
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -33,6 +35,7 @@ const HomeStack = () => (
     <Stack.Screen name="Downloaded" component={DownloadedSongs} options={{ headerTitle: 'Saved Songs' }} />
     <Stack.Screen name="LikedPlaylists" component={LikedPlaylistsScreen} options={{ headerTitle: 'Liked Playlists' }} />
     <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: 'Notifications' }} />
+    <Stack.Screen name="History" component={HistoryScreen} options={{ headerTitle: 'Listening History' }} />
   </Stack.Navigator>
 );
 
@@ -86,7 +89,7 @@ const MainApp = () => {
     const checkUser = async () => {
       const stored = await AsyncStorage.getItem('loggedInUser');
       if (stored) {
-        
+        // Optional: setUser(JSON.parse(stored));
       } else {
         setShowLogin(true);
       }
@@ -109,9 +112,11 @@ const App = () => (
     <DownloadProvider>
       <LikedPlaylistsProvider>
         <NotificationProvider>
-          <NavigationContainer>
-            <MainApp />
-          </NavigationContainer>
+          <HistoryProvider>
+            <NavigationContainer>
+              <MainApp />
+            </NavigationContainer>
+          </HistoryProvider>
         </NotificationProvider>
       </LikedPlaylistsProvider>
     </DownloadProvider>

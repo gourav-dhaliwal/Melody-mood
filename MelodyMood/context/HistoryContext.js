@@ -7,9 +7,9 @@ export const HistoryProvider = ({ children }) => {
 
   const addToHistory = (item) => {
     setHistory(prev => [
-      { ...item, timestamp: Date.now() }, 
+      { ...item, timestamp: Date.now() },
       ...prev.filter(i => i.id !== item.id)
-    ].slice(0, 50)); // Keep last 50 items
+    ].slice(0, 50)); // Keep the last 50 items
   };
 
   return (
@@ -19,4 +19,10 @@ export const HistoryProvider = ({ children }) => {
   );
 };
 
-export const useHistory = () => useContext(HistoryContext);
+export const useHistory = () => {
+  const context = useContext(HistoryContext);
+  if (!context) {
+    throw new Error('useHistory must be used within a HistoryProvider');
+  }
+  return context;
+};
