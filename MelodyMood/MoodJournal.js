@@ -1,122 +1,252 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  FlatList, 
-  StyleSheet, 
-  Dimensions, 
-  SafeAreaView
+import React, { useState, useEffect, useContext } from 'react';
+import {
+  View,
+  TextInput,
+  Button,
+  Alert,
+  FlatList,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Linking,
+  SafeAreaView,
+  Dimensions,
 } from 'react-native';
-import Sentiment from 'sentiment';
+import { Buffer } from 'buffer';
+import { AuthContext } from './context/AuthContext';
+
+global.Buffer = Buffer;
 
 const { width } = Dimensions.get('window');
-const ITEM_WIDTH = (width - 48) / 2;
+const CARD_WIDTH = width - 32;
 
-const moodRecommendations = {
-  happy: ['Happy Beats', 'Feel Good Hits', 'Sunny Day Vibes'],
-  sad: ['Heartbreak Anthems', 'Melancholy Melodies', 'Blue Mood'],
-  energetic: ['Workout Bangers', 'Party Time', 'Upbeat Energy'],
-  relaxed: ['Lo-Fi Beats', 'Acoustic Chill', 'Wind-Down Vibes'],
-  angry: ['Anger Release', 'Power Rock', 'Aggressive Beats'],
-  neutral: ['Popular Picks', 'Mixed Bag', 'Top Charts']
-};
+const CLIENT_ID = '790aa2a5b8514453afc433623add1fb8';
+const CLIENT_SECRET = 'd9d344d4f89947dfa826698d127ee783';
 
-const keywords = {
-  happy: ['happy', 'joy', 'cheerful', 'excited', 'delighted', 'glad', 'content', 'pleased', 'smiling', 'laughing', 'grateful', 'blessed', 'ecstatic', 'thrilled', 'elated', 'euphoric', 'awesome', 'fantastic', 'wonderful'],
-  sad: ['sad', 'cry', 'tears', 'depressed', 'unhappy', 'melancholy', 'blue', 'gloomy', 'heartbroken', 'miserable', 'down', 'lonely', 'sorrow', 'grief', 'despair', 'hopeless', 'empty', 'forlorn'],
-  energetic: ['energetic', 'active', 'motivated', 'pumped', 'hyped', 'lively', 'powerful', 'determined', 'strong', 'inspired', 'driven', 'productive', 'enthusiastic', 'focused', 'alert'],
-  relaxed: ['relaxed', 'calm', 'peaceful', 'serene', 'chill', 'unwind', 'zen', 'tranquil', 'soothing', 'easygoing', 'restful', 'cozy', 'composed', 'quiet', 'balanced', 'laid-back', 'content'],
-  angry: ['angry', 'mad', 'furious', 'rage', 'irritated', 'annoyed', 'frustrated', 'upset', 'enraged', 'fuming', 'outraged', 'resentful', 'bitter', 'pissed', 'aggravated', 'exasperated', 'hostile'],
-  neutral: ['okay', 'meh', 'fine', 'neutral', 'alright', 'indifferent', 'nothing', 'unsure', 'blank', 'normal', 'balanced', 'even', 'stable', 'regular', 'typical'],
-};
+const ProfileScreen = () => {
+  const { user, logout } = useContext(AuthContext);
+  const [playlists, setPlaylists] = useState([]);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [spotifyUrl, setSpotifyUrl] = useState('');
+  const [loading, setLoading] = useState(false);
 
-const MoodJournal = () => {
-  const [journal, setJournal] = useState('');
-  const [recommendations, setRecommendations] = useState([]);
-  const [mood, setMood] = useState(null);
-  const sentiment = new Sentiment();
+  useEffect(() => {
+    console.log('Logged in user:', user); // Debug to check user object
+  }, [user]);
 
-  const analyzeMood = () => {
-    const result = sentiment.analyze(journal);
-    const score = result.score;
-    const tokens = result.tokens.map(token => token.toLowerCase());
+  const getSpotifyToken = async () => {
+    const creds = `${CLIENT_ID}:${CLIENT_SECRET}`;
+    const encodedCreds = Buffer.from(creds).toString('base64');
 
-    let detectedMood = 'neutral';
+    try {
+      const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${encodedCreds}`,
+        },
+        body: 'grant_type=client_credentials',
+      });
 
-    // Check keywords first
-    for (const moodKey in keywords) {
-      if (tokens.some(token => keywords[moodKey].includes(token))) {
-        detectedMood = moodKey;
-        break;
+      if (!response.ok) {
+        throw new Error('Failed to fetch Spotify token');
       }
-    }
 
-    // If no keyword matched, fallback to sentiment score logic
-    if (detectedMood === 'neutral') {
-      if (score > 4) detectedMood = 'happy';
-      else if (score > 0) detectedMood = 'energetic';
-      else if (score < -4) detectedMood = 'sad';
-      else if (score < 0) detectedMood = 'relaxed';
+      const data = await response.json();
+      return data.access_token;
+    } catch (error) {
+      console.error('Error fetching token:', error);
+      throw error;
     }
-
-    setMood(detectedMood);
-    setRecommendations(moodRecommendations[detectedMood]);
   };
 
-  const renderRecommendationItem = ({ item }) => (
-    <View style={styles.recommendationCard}>
-      <Text style={styles.recommendationText}>{item}</Text>
+  const fetchTrackInfo = async (token, trackUrlOrId) => {
+    let trackId = trackUrlOrId;
+
+    if (trackUrlOrId.includes('spotify.com/track/')) {
+      const parts = trackUrlOrId.split('track/');
+      trackId = parts[1].split('?')[0];
+    }
+
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch track info. Check the URL or try again.');
+      }
+
+      const track = await response.json();
+      return {
+        id: track.id,
+        name: track.name,
+        artist: track.artists.map((a) => a.name).join(', '),
+        image: track.album.images[0]?.url,
+        url: track.external_urls.spotify,
+      };
+    } catch (error) {
+      console.error('Error fetching track info:', error);
+      throw error;
+    }
+  };
+
+  const handleAddPlaylist = () => {
+    if (!newPlaylistName.trim()) {
+      Alert.alert('Error', 'Playlist name cannot be empty');
+      return;
+    }
+    setPlaylists((prev) => [
+      ...prev,
+      { id: Date.now(), name: newPlaylistName, songs: [] },
+    ]);
+    setNewPlaylistName('');
+  };
+
+  const handleAddSong = async (playlistId) => {
+    if (!spotifyUrl.trim()) {
+      Alert.alert('Error', 'Please enter a track URL or ID');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const token = await getSpotifyToken();
+      const trackInfo = await fetchTrackInfo(token, spotifyUrl);
+
+      setPlaylists((prev) =>
+        prev.map((playlist) =>
+          playlist.id === playlistId
+            ? { ...playlist, songs: [...playlist.songs, trackInfo] }
+            : playlist
+        )
+      );
+      setSpotifyUrl('');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveSong = (playlistId, songId) => {
+    setPlaylists((prev) =>
+      prev.map((playlist) =>
+        playlist.id === playlistId
+          ? { ...playlist, songs: playlist.songs.filter((s) => s.id !== songId) }
+          : playlist
+      )
+    );
+  };
+
+  const openSpotify = (url) => {
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          Linking.openURL(url);
+        } else {
+          Alert.alert('Error', 'Cannot open URL');
+        }
+      })
+      .catch((err) => console.error('Error opening URL:', err));
+  };
+
+  const renderSong = ({ item, playlistId }) => (
+    <View style={styles.songCard}>
+      <Image source={{ uri: item.image }} style={styles.songImage} />
+      <View style={styles.songInfo}>
+        <Text style={styles.songName}>{item.name}</Text>
+        <Text style={styles.songArtist}>{item.artist}</Text>
+      </View>
+      <View style={styles.songButtons}>
+        <TouchableOpacity onPress={() => openSpotify(item.url)}>
+          <Text style={styles.playText}>▶ Play</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleRemoveSong(playlistId, item.id)}>
+          <Text style={styles.removeText}>✕ Remove</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
-  const data = recommendations;
+  const renderPlaylist = ({ item }) => (
+    <View style={styles.playlistCard}>
+      <Text style={styles.playlistTitle}>{item.name}</Text>
+
+      <TextInput
+        placeholder="Track URL or ID"
+        value={spotifyUrl}
+        onChangeText={setSpotifyUrl}
+        style={styles.input}
+      />
+      <TouchableOpacity
+        style={styles.addSongButton}
+        onPress={() => handleAddSong(item.id)}
+      >
+        <Text style={styles.addSongButtonText}>Add Song</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.songsHeading}>Songs</Text>
+
+      {item.songs.length === 0 ? (
+        <Text style={styles.noSongsText}>No songs added yet.</Text>
+      ) : (
+        <FlatList
+          data={item.songs}
+          keyExtractor={(song) => song.id}
+          renderItem={({ item: song }) => renderSong({ item: song, playlistId: item.id })}
+          scrollEnabled={false}
+        />
+      )}
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <Text style={styles.userText}>
+          {user?.name
+            ? `Logged in as: ${user.name}`
+            : user?.username
+            ? `Logged in as: ${user.username}`
+            : user?.email
+            ? `User: ${user.email}`
+            : 'Welcome!'}
+        </Text>
+        <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+          <Text style={styles.logoutBtnText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.newPlaylistSection}>
+        <TextInput
+          style={styles.input}
+          placeholder="New Playlist Name"
+          value={newPlaylistName}
+          onChangeText={setNewPlaylistName}
+        />
+        <TouchableOpacity style={styles.createPlaylistBtn} onPress={handleAddPlaylist}>
+          <Text style={styles.createPlaylistBtnText}>Create Playlist</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1DB954" />
+          <Text style={{ color: '#1DB954', marginTop: 8 }}>Loading...</Text>
+        </View>
+      )}
+
       <FlatList
-        data={data}
-        keyExtractor={(item) => item}
-        numColumns={2}
-        renderItem={renderRecommendationItem}
-        contentContainerStyle={styles.listContent}
-        columnWrapperStyle={styles.row}
-        ListHeaderComponent={
-          <>
-            <View style={styles.header}>
-              <Text style={styles.mainTitle}>✍️ Mood Journal</Text>
-              <Text style={styles.subtitle}>Express your feelings and discover matching playlists</Text>
-            </View>
-
-            <View style={styles.journalSection}>
-              <TextInput
-                style={styles.textInput}
-                multiline
-                placeholder="How are you feeling today?"
-                value={journal}
-                onChangeText={setJournal}
-              />
-              <TouchableOpacity style={styles.analyzeButton} onPress={analyzeMood}>
-                <Text style={styles.analyzeButtonText}>Analyze Mood</Text>
-              </TouchableOpacity>
-            </View>
-
-            {mood && (
-              <View style={styles.resultSection}>
-                <Text style={styles.resultText}>
-                  Detected Mood: <Text style={styles.moodText}>{mood.charAt(0).toUpperCase() + mood.slice(1)}</Text>
-                </Text>
-                <Text style={styles.recommendationsTitle}>Recommended Playlists:</Text>
-              </View>
-            )}
-          </>
-        }
-        ListFooterComponent={
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Powered by Sentiment Analysis ✨</Text>
-          </View>
-        }
+        data={playlists}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderPlaylist}
+        contentContainerStyle={{ paddingBottom: 50, paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
@@ -127,121 +257,146 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 30,
-  },
   header: {
-    paddingTop: 40,
-    paddingHorizontal: 4,
-    paddingBottom: 10,
     backgroundColor: '#fff',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
     elevation: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
   },
-  mainTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  userText: {
+    fontSize: 20,
+    fontWeight: '600',
     color: '#2c3e50',
-    marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#7f8c8d',
-    marginBottom: 10,
+  logoutBtn: {
+    backgroundColor: '#ff5c5c',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  journalSection: {
-    padding: 15,
+  logoutBtnText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  newPlaylistSection: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  input: {
     backgroundColor: '#fff',
     borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-    marginBottom: 25,
-  },
-  textInput: {
-    height: 120,
-    borderColor: '#ddd',
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 15,
-    textAlignVertical: 'top',
+    borderColor: '#ddd',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     fontSize: 16,
-    color: '#2c3e50',
+    marginBottom: 10,
   },
-  analyzeButton: {
+  createPlaylistBtn: {
     backgroundColor: '#1DB954',
-    padding: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 15,
     alignItems: 'center',
   },
-  analyzeButtonText: {
+  createPlaylistBtnText: {
     color: '#fff',
+    fontWeight: '700',
     fontSize: 16,
-    fontWeight: '600',
   },
-  resultSection: {
+  playlistCard: {
+    backgroundColor: '#fff',
     marginBottom: 20,
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 6,
   },
-  resultText: {
-    fontSize: 18,
+  playlistTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 12,
     color: '#2c3e50',
-    marginBottom: 10,
-    fontWeight: '600',
   },
-  moodText: {
+  addSongButton: {
+    backgroundColor: '#1DB954',
+    borderRadius: 15,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  addSongButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  songsHeading: {
+    fontWeight: '700',
+    fontSize: 18,
+    marginBottom: 8,
+    color: '#34495e',
+  },
+  noSongsText: {
+    fontStyle: 'italic',
+    color: '#7f8c8d',
+  },
+  songCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eef5f4',
+    padding: 12,
+    borderRadius: 15,
+    marginBottom: 10,
+  },
+  songImage: {
+    width: 55,
+    height: 55,
+    borderRadius: 10,
+    marginRight: 12,
+  },
+  songInfo: {
+    flex: 1,
+  },
+  songName: {
+    fontWeight: '700',
+    fontSize: 16,
+    color: '#2c3e50',
+  },
+  songArtist: {
+    color: '#7f8c8d',
+    marginTop: 2,
+  },
+  songButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  playText: {
     color: '#1DB954',
     fontWeight: '700',
-  },
-  recommendationsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: '#7f8c8d',
-  },
-  row: {
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  recommendationCard: {
-    width: ITEM_WIDTH,
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-    marginHorizontal: 4,
-    alignItems: 'center',
-  },
-  recommendationText: {
+    marginRight: 15,
     fontSize: 14,
-    fontWeight: '600',
-    color: '#2c3e50',
-    textAlign: 'center',
   },
-  footer: {
-    paddingVertical: 30,
-    alignItems: 'center',
-  },
-  footerText: {
+  removeText: {
+    color: '#ff5c5c',
+    fontWeight: '700',
     fontSize: 14,
-    color: '#7f8c8d',
-    fontStyle: 'italic',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
   },
 });
 
-export default MoodJournal;
+export default ProfileScreen;

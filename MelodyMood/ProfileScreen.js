@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   TextInput,
@@ -13,7 +13,7 @@ import {
   Linking,
 } from 'react-native';
 import { Buffer } from 'buffer';
-
+import { AuthContext } from './context/AuthContext';
 
 global.Buffer = Buffer;
 
@@ -21,10 +21,15 @@ const CLIENT_ID = '790aa2a5b8514453afc433623add1fb8';
 const CLIENT_SECRET = 'd9d344d4f89947dfa826698d127ee783';
 
 const ProfileScreen = () => {
+  const { user, logout } = useContext(AuthContext);
   const [playlists, setPlaylists] = useState([]);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [spotifyUrl, setSpotifyUrl] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    console.log('Logged in user:', user); // Debug to check user object
+  }, [user]);
 
   const getSpotifyToken = async () => {
     const creds = `${CLIENT_ID}:${CLIENT_SECRET}`;
@@ -139,7 +144,7 @@ const ProfileScreen = () => {
         if (supported) {
           Linking.openURL(url);
         } else {
-          Alert.alert('Error', 'Cannot open Spotify URL');
+          Alert.alert('Error', 'Cannot open URL');
         }
       })
       .catch((err) => console.error('Error opening URL:', err));
@@ -149,7 +154,7 @@ const ProfileScreen = () => {
     <View style={styles.playlistItem}>
       <Text style={styles.playlistName}>{item.name}</Text>
       <TextInput
-        placeholder="Spotify Track URL or ID"
+        placeholder="Track URL or ID"
         value={spotifyUrl}
         onChangeText={setSpotifyUrl}
         style={styles.input}
@@ -181,7 +186,16 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>My Profile</Text>
+      <Text style={styles.title}>
+        {user?.name
+          ? `Logged in as: ${user.name}`
+          : user?.username
+          ? `Logged in as: ${user.username}`
+          : user?.email
+          ? `User : ${user.email}`
+          : 'Welcome!'}
+      </Text>
+      <Button title="Logout" onPress={logout} color="#ff5c5c" />
       <TextInput
         style={styles.input}
         placeholder="New Playlist Name"
@@ -206,21 +220,76 @@ const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 8, marginBottom: 8, borderRadius: 4 },
-  playlistList: { marginTop: 16 },
-  playlistItem: { marginBottom: 16, padding: 16, backgroundColor: '#f9f9f9', borderRadius: 8 },
-  playlistName: { fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
-  songsTitle: { marginTop: 8, fontWeight: 'bold' },
-  songItem: { marginVertical: 6 },
-  songImage: { width: 50, height: 50, marginRight: 12, borderRadius: 4 },
-  songName: { fontSize: 16 },
-  songActions: { flexDirection: 'row', marginTop: 4 },
-  playText: { color: 'blue', fontWeight: 'bold', marginRight: 12 },
-  removeText: { color: 'red', fontWeight: 'bold' },
-  noSongsText: { fontStyle: 'italic', marginTop: 8 },
-  loadingContainer: { marginTop: 16, alignItems: 'center' },
+  container: {
+    flex: 1,
+    padding: 16,
+    paddingTop: 50,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 8,
+    marginBottom: 8,
+    borderRadius: 4,
+  },
+  playlistList: {
+    marginTop: 16,
+  },
+  playlistItem: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+  },
+  playlistName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  songsTitle: {
+    marginTop: 8,
+    fontWeight: 'bold',
+  },
+  songItem: {
+    marginVertical: 6,
+  },
+  songImage: {
+    width: 50,
+    height: 50,
+    marginRight: 12,
+    borderRadius: 4,
+  },
+  songName: {
+    fontSize: 16,
+  },
+  songActions: {
+    flexDirection: 'row',
+    marginTop: 4,
+  },
+  playText: {
+    color: 'blue',
+    fontWeight: 'bold',
+    marginRight: 12,
+  },
+  removeText: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  noSongsText: {
+    fontStyle: 'italic',
+    marginTop: 8,
+  },
+  loadingContainer: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
 });
 
 export default ProfileScreen;
