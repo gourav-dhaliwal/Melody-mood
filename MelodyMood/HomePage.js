@@ -9,25 +9,22 @@ import {
   StyleSheet,
   Modal,
   Pressable,
-  Button
+  Button,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { searchArtist, getAccessToken } from './utils/spotifyApi';
 import { Ionicons } from '@expo/vector-icons';
-import { DownloadContext } from './context/DownloadContext';
 import { NotificationContext } from './context/NotificationContext';
 import { AuthContext } from './context/AuthContext';
+import { searchArtist } from './utils/spotifyApi';
 
 const HomePage = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
-  const [followedArtists, setFollowedArtists] = useState([]);
   const [mainMenuVisible, setMainMenuVisible] = useState(false);
-  const [selectedArtist, setSelectedArtist] = useState(null);
   const navigation = useNavigation();
-  const { downloadSong } = useContext(DownloadContext);
   const { addNotification } = useContext(NotificationContext);
   const { user, logout } = useContext(AuthContext);
+  const [followedArtists, setFollowedArtists] = useState([]);
 
   const handleSearch = async () => {
     try {
@@ -38,7 +35,7 @@ const HomePage = () => {
     }
   };
 
-  const toggleFollow = async (artistId, artistName) => {
+  const toggleFollow = (artistId, artistName) => {
     setFollowedArtists((prev) => {
       const isFollowing = prev.includes(artistId);
       const updatedList = isFollowing
@@ -55,56 +52,80 @@ const HomePage = () => {
     });
   };
 
-  const handleDownload = async (artistId) => {
-    const token = await getAccessToken();
-    try {
-      const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await res.json();
-      const topTrack = data.tracks?.[0];
-
-      if (!topTrack || !topTrack.external_urls?.spotify) {
-        alert('No valid track URL available');
-        return;
-      }
-
-      const songData = {
-        id: topTrack.id,
-        name: topTrack.name || 'Unknown Title',
-        artist: topTrack.artists?.[0]?.name || 'Unknown Artist',
-        duration: topTrack.duration_ms || 0,
-        image: topTrack.album?.images?.[0]?.url || '',
-        url: topTrack?.external_urls?.spotify ?? '',
-      };
-
-      downloadSong(songData);
-      navigation.navigate('Saved');
-      addNotification(`You downloaded "${topTrack.name}" by ${topTrack.artists?.[0]?.name}`);
-    } catch (error) {
-      console.error('Download failed:', error);
-      alert('Failed to download song');
-    }
-    setMainMenuVisible(false);
-  };
-
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Image source={{ uri: item.images?.[0]?.url || 'https://via.placeholder.com/100' }} style={styles.image} />
+      <Image
+        source={{ uri: item.images?.[0]?.url || 'https://via.placeholder.com/100' }}
+        style={styles.image}
+      />
       <View style={styles.details}>
         <Text style={styles.name}>{item.name}</Text>
         <TouchableOpacity
-          style={[styles.followBtn, followedArtists.includes(item.id) ? styles.unfollow : styles.follow]}
+          style={[
+            styles.followBtn,
+            followedArtists.includes(item.id) ? styles.unfollow : styles.follow,
+          ]}
           onPress={() => toggleFollow(item.id, item.name)}
         >
-          <Text style={styles.btnText}>{followedArtists.includes(item.id) ? 'Unfollow' : 'Follow'}</Text>
+          <Text style={styles.btnText}>
+            {followedArtists.includes(item.id) ? 'Unfollow' : 'Follow'}
+          </Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.menuIcon}>
-        <Ionicons name="ellipsis-vertical" size={20} color="#666" />
-      </TouchableOpacity>
     </View>
+  );
+
+  const renderMenu = () => (
+    <Modal
+      visible={mainMenuVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setMainMenuVisible(false)}
+    >
+      <Pressable
+        style={styles.modalOverlay}
+        onPress={() => setMainMenuVisible(false)}
+      >
+        <View style={styles.smallSidebarMenu}>
+          <TouchableOpacity
+            style={styles.modalOption}
+            onPress={() => {
+              navigation.navigate('Downloaded');
+              setMainMenuVisible(false);
+            }}
+          >
+            <Text style={styles.modalText}>Save to Library</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.modalOption}
+            onPress={() => {
+              navigation.navigate('LikedPlaylists');
+              setMainMenuVisible(false);
+            }}
+          >
+            <Text style={styles.modalText}>Liked Playlists</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.modalOption}
+            onPress={() => {
+              navigation.navigate('Notifications');
+              setMainMenuVisible(false);
+            }}
+          >
+            <Text style={styles.modalText}>Notifications</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.modalOption}
+            onPress={() => {
+              navigation.navigate('History');
+              setMainMenuVisible(false);
+            }}
+          >
+            <Text style={styles.modalText}>History</Text>
+          </TouchableOpacity>
+        </View>
+      </Pressable>
+    </Modal>
   );
 
   return (
@@ -113,10 +134,7 @@ const HomePage = () => {
         <Text style={styles.headerTitle}>Melody Mood</Text>
         <TouchableOpacity
           style={styles.menuIcon}
-          onPress={() => {
-            setSelectedArtist(null);
-            setMainMenuVisible(true);
-          }}
+          onPress={() => setMainMenuVisible(true)}
         >
           <Ionicons name="ellipsis-vertical" size={24} color="white" />
         </TouchableOpacity>
@@ -145,26 +163,7 @@ const HomePage = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      <Modal
-        visible={mainMenuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMainMenuVisible(false)}
-      >
-        <Pressable style={styles.modalOverlay} onPress={() => setMainMenuVisible(false)}>
-          <View style={styles.smallSidebarMenu}>
-            <TouchableOpacity style={styles.modalOption} onPress={() => { navigation.navigate('Downloaded'); setMainMenuVisible(false); }}>
-              <Text style={styles.modalText}>Save to Library</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalOption} onPress={() => { navigation.navigate('LikedPlaylists'); setMainMenuVisible(false); }}>
-              <Text style={styles.modalText}>Liked Playlists</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalOption} onPress={() => { navigation.navigate('Notifications'); setMainMenuVisible(false); }}>
-              <Text style={styles.modalText}>Notifications</Text>
-            </TouchableOpacity>
-          </View>
-        </Pressable>
-      </Modal>
+      {renderMenu()}
     </View>
   );
 };
@@ -200,60 +199,41 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
-  userEmail: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#2c3e50',
-    marginBottom: 8,
-  },
+  userEmail: { fontSize: 15, fontWeight: '600', color: '#2c3e50', marginBottom: 8 },
   input: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 18,
-    marginHorizontal: 16,
-    marginTop: 24,
-    marginBottom: 12,
-    fontSize: 16,
+    margin: 16,
+    padding: 10,
     borderWidth: 1,
-    borderColor: '#e1e5e9',
+    borderColor: '#ccc',
+    borderRadius: 10,
+    backgroundColor: '#fff',
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 8,
+    padding: 12,
     marginHorizontal: 16,
-    backgroundColor: '#ffffff',
-    padding: 18,
-    borderRadius: 20,
-    borderColor: '#f0f2f5',
-    borderWidth: 1,
-  },
-  image: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    marginRight: 18,
-    borderWidth: 2,
-    borderColor: '#e1e5e9',
-  },
-  details: { flex: 1 },
-  name: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: '#2c3e50',
     marginBottom: 8,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
+  image: { width: 50, height: 50, borderRadius: 25, marginRight: 12 },
+  details: { flex: 1 },
+  name: { fontSize: 16, fontWeight: 'bold', color: '#333' },
   followBtn: {
-    marginTop: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    alignItems: 'center',
-    width: 110,
+    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
   follow: { backgroundColor: '#1DB954' },
-  unfollow: { backgroundColor: '#6c757d' },
-  btnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  unfollow: { backgroundColor: '#d9534f' },
+  btnText: { color: '#fff', fontSize: 14 },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -279,9 +259,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 2,
   },
-  modalText: {
-    color: '#2c3e50',
-    fontSize: 17,
-    fontWeight: '600',
-  },
+  modalText: { color: '#2c3e50', fontSize: 17, fontWeight: '600' },
 });
+

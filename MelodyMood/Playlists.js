@@ -146,13 +146,7 @@ const Playlists = ({ navigation }) => {
         <View style={styles.header}>
           <Text style={styles.mainTitle}>🎵 Mood Playlists</Text>
           <Text style={styles.subtitle}>Find the perfect soundtrack for your feelings</Text>
-          
-          <TouchableOpacity 
-            style={styles.manageButton}
-            onPress={() => navigation.navigate('ManagePlaylists')}
-          >
-            <Text style={styles.manageButtonText}>Manage My Playlists</Text>
-          </TouchableOpacity>
+
         </View>
 
         {moods.map((mood) => renderMoodSection(mood))}
