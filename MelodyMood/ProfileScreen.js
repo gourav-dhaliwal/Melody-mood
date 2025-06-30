@@ -11,11 +11,16 @@ import {
   StyleSheet,
   ActivityIndicator,
   Linking,
+  SafeAreaView,
+  Dimensions,
 } from 'react-native';
 import { Buffer } from 'buffer';
 import { AuthContext } from './context/AuthContext';
 
 global.Buffer = Buffer;
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width - 32;
 
 const CLIENT_ID = '790aa2a5b8514453afc433623add1fb8';
 const CLIENT_SECRET = 'd9d344d4f89947dfa826698d127ee783';
@@ -150,145 +155,247 @@ const ProfileScreen = () => {
       .catch((err) => console.error('Error opening URL:', err));
   };
 
+  const renderSong = ({ item, playlistId }) => (
+    <View style={styles.songCard}>
+      <Image source={{ uri: item.image }} style={styles.songImage} />
+      <View style={styles.songInfo}>
+        <Text style={styles.songName}>{item.name}</Text>
+        <Text style={styles.songArtist}>{item.artist}</Text>
+      </View>
+      <View style={styles.songButtons}>
+        <TouchableOpacity onPress={() => openSpotify(item.url)}>
+          <Text style={styles.playText}>▶ Play</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleRemoveSong(playlistId, item.id)}>
+          <Text style={styles.removeText}>✕ Remove</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   const renderPlaylist = ({ item }) => (
-    <View style={styles.playlistItem}>
-      <Text style={styles.playlistName}>{item.name}</Text>
+    <View style={styles.playlistCard}>
+      <Text style={styles.playlistTitle}>{item.name}</Text>
+
       <TextInput
         placeholder="Track URL or ID"
         value={spotifyUrl}
         onChangeText={setSpotifyUrl}
         style={styles.input}
       />
-      <Button title="Add Song" onPress={() => handleAddSong(item.id)} />
-      <Text style={styles.songsTitle}>Songs:</Text>
-      {item.songs.length > 0 ? (
-        item.songs.map((song) => (
-          <View key={song.id} style={styles.songItem}>
-            <Image source={{ uri: song.image }} style={styles.songImage} />
-            <Text style={styles.songName}>
-              {song.name} — {song.artist}
-            </Text>
-            <View style={styles.songActions}>
-              <TouchableOpacity onPress={() => openSpotify(song.url)}>
-                <Text style={styles.playText}>Play</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleRemoveSong(item.id, song.id)}>
-                <Text style={styles.removeText}>Remove</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))
-      ) : (
+      <TouchableOpacity
+        style={styles.addSongButton}
+        onPress={() => handleAddSong(item.id)}
+      >
+        <Text style={styles.addSongButtonText}>Add Song</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.songsHeading}>Songs</Text>
+
+      {item.songs.length === 0 ? (
         <Text style={styles.noSongsText}>No songs added yet.</Text>
+      ) : (
+        <FlatList
+          data={item.songs}
+          keyExtractor={(song) => song.id}
+          renderItem={({ item: song }) => renderSong({ item: song, playlistId: item.id })}
+          scrollEnabled={false}
+        />
       )}
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        {user?.name
-          ? `Logged in as: ${user.name}`
-          : user?.username
-          ? `Logged in as: ${user.username}`
-          : user?.email
-          ? `User : ${user.email}`
-          : 'Welcome!'}
-      </Text>
-      <Button title="Logout" onPress={logout} color="#ff5c5c" />
-      <TextInput
-        style={styles.input}
-        placeholder="New Playlist Name"
-        value={newPlaylistName}
-        onChangeText={setNewPlaylistName}
-      />
-      <Button title="Create Playlist" onPress={handleAddPlaylist} />
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <Text style={styles.userText}>
+          {user?.name
+            ? `Logged in as: ${user.name}`
+            : user?.username
+            ? `Logged in as: ${user.username}`
+            : user?.email
+            ? `User: ${user.email}`
+            : 'Welcome!'}
+        </Text>
+        <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+          <Text style={styles.logoutBtnText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.newPlaylistSection}>
+        <TextInput
+          style={styles.input}
+          placeholder="New Playlist Name"
+          value={newPlaylistName}
+          onChangeText={setNewPlaylistName}
+        />
+        <TouchableOpacity style={styles.createPlaylistBtn} onPress={handleAddPlaylist}>
+          <Text style={styles.createPlaylistBtnText}>Create Playlist</Text>
+        </TouchableOpacity>
+      </View>
+
       {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#1DB954" />
-          <Text>Loading...</Text>
+          <Text style={{ color: '#1DB954', marginTop: 8 }}>Loading...</Text>
         </View>
       )}
+
       <FlatList
         data={playlists}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderPlaylist}
-        style={styles.playlistList}
+        contentContainerStyle={{ paddingBottom: 50, paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    padding: 16,
-    paddingTop: 50,
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f9fa',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
+  header: {
+    backgroundColor: '#fff',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    elevation: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  userText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#2c3e50',
+  },
+  logoutBtn: {
+    backgroundColor: '#ff5c5c',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  logoutBtnText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  newPlaylistSection: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
   },
   input: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 8,
-    marginBottom: 8,
-    borderRadius: 4,
+    borderColor: '#ddd',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: 16,
+    marginBottom: 10,
   },
-  playlistList: {
-    marginTop: 16,
+  createPlaylistBtn: {
+    backgroundColor: '#1DB954',
+    paddingVertical: 14,
+    borderRadius: 15,
+    alignItems: 'center',
   },
-  playlistItem: {
-    marginBottom: 16,
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-  },
-  playlistName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  songsTitle: {
-    marginTop: 8,
-    fontWeight: 'bold',
-  },
-  songItem: {
-    marginVertical: 6,
-  },
-  songImage: {
-    width: 50,
-    height: 50,
-    marginRight: 12,
-    borderRadius: 4,
-  },
-  songName: {
+  createPlaylistBtnText: {
+    color: '#fff',
+    fontWeight: '700',
     fontSize: 16,
   },
-  songActions: {
-    flexDirection: 'row',
-    marginTop: 4,
+  playlistCard: {
+    backgroundColor: '#fff',
+    marginBottom: 20,
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 6,
   },
-  playText: {
-    color: 'blue',
-    fontWeight: 'bold',
-    marginRight: 12,
+  playlistTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 12,
+    color: '#2c3e50',
   },
-  removeText: {
-    color: 'red',
-    fontWeight: 'bold',
+  addSongButton: {
+    backgroundColor: '#1DB954',
+    borderRadius: 15,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  addSongButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  songsHeading: {
+    fontWeight: '700',
+    fontSize: 18,
+    marginBottom: 8,
+    color: '#34495e',
   },
   noSongsText: {
     fontStyle: 'italic',
-    marginTop: 8,
+    color: '#7f8c8d',
+  },
+  songCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eef5f4',
+    padding: 12,
+    borderRadius: 15,
+    marginBottom: 10,
+  },
+  songImage: {
+    width: 55,
+    height: 55,
+    borderRadius: 10,
+    marginRight: 12,
+  },
+  songInfo: {
+    flex: 1,
+  },
+  songName: {
+    fontWeight: '700',
+    fontSize: 16,
+    color: '#2c3e50',
+  },
+  songArtist: {
+    color: '#7f8c8d',
+    marginTop: 2,
+  },
+  songButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  playText: {
+    color: '#1DB954',
+    fontWeight: '700',
+    marginRight: 15,
+    fontSize: 14,
+  },
+  removeText: {
+    color: '#ff5c5c',
+    fontWeight: '700',
+    fontSize: 14,
   },
   loadingContainer: {
-    marginTop: 16,
     alignItems: 'center',
+    marginBottom: 20,
   },
 });
 
