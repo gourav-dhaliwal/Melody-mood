@@ -25,6 +25,8 @@ import LikedPlaylistsScreen from './LikedPlaylistsScreen';
 import Notifications from './Notifications';
 import HistoryScreen from './screens/HistoryScreen';
 import ProfileScreen from './ProfileScreen';
+import NotificationBanner from './NotificationBanner';
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -130,7 +132,10 @@ const App = () => (
         <NotificationProvider>
           <HistoryProvider>
             <NavigationContainer>
-              <MainApp />
+              <View style={{ flex: 1 }}>
+                <NotificationBanner />
+                <MainApp />
+              </View>
             </NavigationContainer>
           </HistoryProvider>
         </NotificationProvider>
@@ -138,7 +143,6 @@ const App = () => (
     </DownloadProvider>
   </AuthProvider>
 );
-
 export default App;
 
 
