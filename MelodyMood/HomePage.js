@@ -140,12 +140,12 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
-      {user && (
-        <View style={styles.userBar}>
-          <Text style={styles.userEmail}>Logged in as: {user.email}</Text>
-          <Button title="Logout" onPress={logout} color="#d9534f" />
-        </View>
-      )}
+      {/* {user && ( */}
+      {/* //   <View style={styles.userBar}>
+      //     <Text style={styles.userEmail}>Logged in as: {user.email}</Text> */}
+      {/* //     <Button title="Logout" onPress={logout} color="#d9534f" /> */}
+      {/* //   </View> */}
+      {/* // )} */}
 
       <TextInput
         placeholder="Search for an artist..."
