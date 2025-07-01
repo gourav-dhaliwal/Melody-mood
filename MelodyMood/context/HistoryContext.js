@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const HistoryContext = createContext();
 
@@ -9,11 +9,16 @@ export const HistoryProvider = ({ children }) => {
     setHistory(prev => [
       { ...item, timestamp: Date.now() },
       ...prev.filter(i => i.id !== item.id)
-    ].slice(0, 50)); // Keep the last 50 items
+    ].slice(0, 50));
+  };
+
+  const clearHistory = () => {
+    console.log('Clearing history'); // Debug
+    setHistory([]); // Clear all
   };
 
   return (
-    <HistoryContext.Provider value={{ history, addToHistory }}>
+    <HistoryContext.Provider value={{ history, addToHistory, clearHistory }}>
       {children}
     </HistoryContext.Provider>
   );

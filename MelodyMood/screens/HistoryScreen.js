@@ -1,44 +1,61 @@
+// In HistoryScreen.js
+
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useHistory } from '../context/HistoryContext';
-
 const COLORS = {
-  primary: '#1DB954',
-  song: '#FF9F43',
-  playlist: '#4BC0C8',
+  background: '#FFFFFF',
   text: '#000000',
   subtext: '#666666',
-  background: '#FFFFFF',
   card: '#F8F8F8',
-  divider: '#E0E0E0'
+  divider: '#E0E0E0',
+  song: '#FF9F43',
+  playlist: '#4BC0C8',
+  danger: '#FF3B30'
+};
+export default function HistoryScreen({ navigation }) {
+  const { history, clearHistory } = useHistory(); // <- Now includes clearHistory
+
+  const confirmClear = () => {
+  Alert.alert(
+    'Clear History',
+    'Are you sure you want to delete all playback history?',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: () => {
+          clearHistory(); // <- Must be a function call with ()
+        }
+      }
+    ]
+  );
 };
 
-export default function HistoryScreen({ navigation }) {
-  const { history } = useHistory();
-
-  const keyExtractor = (item, index) =>
-    `${item.id}-${item.timestamp}-${index}`;
-
-  const getItemColor = (type) => type === 'song' ? COLORS.song : COLORS.playlist;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Listening History</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Listening History</Text>
+        {history.length > 0 && (
+          <TouchableOpacity onPress={confirmClear}>
+            <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+          </TouchableOpacity>
+        )}
+      </View>
 
       <FlatList
         data={history}
-        keyExtractor={keyExtractor}
+        keyExtractor={(item, index) => `${item.id}-${item.timestamp}-${index}`}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={[
-              styles.item,
-              {
-                borderLeftWidth: 4,
-                borderLeftColor: getItemColor(item.type),
-                marginBottom: 8
-              }
-            ]}
+            style={[styles.item, {
+              borderLeftWidth: 4,
+              borderLeftColor: item.type === 'song' ? '#FF9F43' : '#4BC0C8',
+              marginBottom: 8
+            }]}
             onPress={() => navigation.navigate('TrackList', {
               playlistId: item.id,
               playlistName: item.name
@@ -47,7 +64,7 @@ export default function HistoryScreen({ navigation }) {
             <Ionicons
               name={item.type === 'song' ? 'musical-notes' : 'list'}
               size={20}
-              color={getItemColor(item.type)}
+              color={item.type === 'song' ? '#FF9F43' : '#4BC0C8'}
               style={styles.icon}
             />
             <View style={styles.textContainer}>
@@ -65,17 +82,13 @@ export default function HistoryScreen({ navigation }) {
                 </Text>
               </View>
             </View>
-            <Ionicons
-              name="chevron-forward"
-              size={18}
-              color={COLORS.subtext}
-            />
+            <Ionicons name="chevron-forward" size={18} color="#666" />
           </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => <View style={styles.divider} />}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <Ionicons name="time-outline" size={48} color={COLORS.subtext} />
+            <Ionicons name="time-outline" size={48} color="#666666" />
             <Text style={styles.emptyText}>No recent activity</Text>
           </View>
         )}
@@ -83,6 +96,7 @@ export default function HistoryScreen({ navigation }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -147,9 +161,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 40
   },
+  headerRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 20,
+  marginLeft: 8,
+  marginRight: 8
+},
+
   emptyText: {
     color: COLORS.subtext,
     fontSize: 16,
     marginTop: 16
+  
   }
+  
 });
