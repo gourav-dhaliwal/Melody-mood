@@ -57,6 +57,24 @@ export const searchArtist = async (artistName) => {
     return [];
   }
 };
+export const searchTracks = async (trackName) => {
+  const token = await getAccessToken();
+  if (!token || !trackName) return [];
+
+  try {
+    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(trackName)}&type=track&limit=10`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const json = await res.json();
+    return json.tracks?.items || [];
+  } catch (error) {
+    console.error('Error searching for track:', error);
+    return [];
+  }
+};
 
 // Fake follow for UI
 export const followArtist = async (artistId) => {
