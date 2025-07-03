@@ -2,24 +2,25 @@ import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Linking, ActivityIndicator, StyleSheet, Image, Alert } from 'react-native';
 import { fetchTracksFromPlaylist } from '../utils/spotifyApi.js';
 import { DownloadContext } from '../context/DownloadContext';
-import { useHistory } from '../context/HistoryContext'; // New import
+import { useHistory } from '../context/HistoryContext';
 import { Ionicons } from '@expo/vector-icons';
 
 const TrackListScreen = ({ route, navigation }) => {
   const { playlistId, playlistName } = route.params;
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isShuffling, setIsShuffling] = useState(false);
   const { downloadSong } = useContext(DownloadContext);
-  const { addToHistory } = useHistory(); // New history hook
+  const { addToHistory } = useHistory();
 
   useEffect(() => {
     const getTracks = async () => {
       setLoading(true);
       try {
         const data = await fetchTracksFromPlaylist(playlistId);
-        setTracks(data);
-        
-        // Add playlist to history when loaded
+        const shuffled = isShuffling ? [...data].sort(() => Math.random() - 0.5) : data;
+        setTracks(shuffled);
+
         if (data.length > 0) {
           addToHistory({
             id: playlistId,
@@ -35,21 +36,20 @@ const TrackListScreen = ({ route, navigation }) => {
       }
     };
     getTracks();
-  }, [playlistId]);
+  }, [playlistId, isShuffling]);
 
-  const handleTrackPress = (track) => {
-    // Add track to history when played
+  const handleTrackPress = async (track) => {
     addToHistory({
       id: track.id,
       name: track.name,
       type: 'song',
       artist: track.artists?.[0]?.name,
-      image: track.album?.images?.[0]?.url
+      image: track.album?.images?.[0]?.url,
     });
 
     const url = track.external_urls.spotify;
     if (url) {
-      Linking.openURL(url);
+      await Linking.openURL(url);
     }
   };
 
@@ -73,15 +73,9 @@ const TrackListScreen = ({ route, navigation }) => {
 
     return (
       <View style={styles.trackItem}>
-        <TouchableOpacity 
-          onPress={() => handleTrackPress(track)} 
-          style={styles.trackContent}
-        >
+        <TouchableOpacity onPress={() => handleTrackPress(track)} style={styles.trackContent}>
           {track.album?.images?.[0]?.url && (
-            <Image 
-              source={{ uri: track.album.images[0].url }} 
-              style={styles.albumArt} 
-            />
+            <Image source={{ uri: track.album.images[0].url }} style={styles.albumArt} />
           )}
           <View style={styles.trackInfo}>
             <Text style={styles.trackName} numberOfLines={1}>{track.name}</Text>
@@ -91,10 +85,7 @@ const TrackListScreen = ({ route, navigation }) => {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          onPress={() => handleDownloadPress(track)}
-          style={styles.downloadButton}
-        >
+        <TouchableOpacity onPress={() => handleDownloadPress(track)} style={styles.downloadButton}>
           <Ionicons name="download" size={20} color="#1DB954" />
         </TouchableOpacity>
       </View>
@@ -118,7 +109,14 @@ const TrackListScreen = ({ route, navigation }) => {
         </TouchableOpacity>
         <Text style={styles.header} numberOfLines={1}>{playlistName || 'Playlist Tracks'}</Text>
       </View>
-      
+
+      <View style={styles.controlBar}>
+        <TouchableOpacity onPress={() => setIsShuffling(prev => !prev)} style={styles.controlButton}>
+          <Ionicons name={isShuffling ? 'shuffle' : 'shuffle-outline'} size={24} color={isShuffling ? '#1DB954' : '#fff'} />
+          <Text style={styles.controlLabel}>Shuffle</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
         data={tracks}
         keyExtractor={(item, index) => item.track?.id || index.toString()}
@@ -135,10 +133,7 @@ const TrackListScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
+  container: { flex: 1, backgroundColor: '#121212' },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -146,15 +141,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333',
   },
-  backButton: {
-    marginRight: 15,
+  backButton: { marginRight: 15 },
+  header: { flex: 1, fontSize: 18, fontWeight: 'bold', color: 'white' },
+  controlBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a2a',
   },
-  header: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-  },
+  controlButton: { alignItems: 'center' },
+  controlLabel: { fontSize: 12, color: '#ccc', marginTop: 4 },
   trackItem: {
     flexDirection: 'row',
     padding: 15,
@@ -173,47 +170,25 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginRight: 15,
   },
-  trackInfo: {
-    flex: 1,
-  },
-  trackName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-  },
-  artistName: {
-    fontSize: 14,
-    color: '#b3b3b3',
-    marginTop: 4,
-  },
-  downloadButton: {
-    padding: 8,
-  },
-  listContent: {
-    paddingBottom: 20,
-  },
+  trackInfo: { flex: 1 },
+  trackName: { fontSize: 16, fontWeight: '600', color: 'white' },
+  artistName: { fontSize: 14, color: '#b3b3b3', marginTop: 4 },
+  downloadButton: { padding: 8 },
+  listContent: { paddingBottom: 20 },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#121212',
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#b3b3b3',
-  },
+  loadingText: { marginTop: 10, fontSize: 16, color: '#b3b3b3' },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  emptyText: {
-    fontSize: 16,
-    color: '#b3b3b3',
-    textAlign: 'center',
-  },
+  emptyText: { fontSize: 16, color: '#b3b3b3', textAlign: 'center' },
 });
 
 export default TrackListScreen;
