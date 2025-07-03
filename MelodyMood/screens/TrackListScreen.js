@@ -11,7 +11,7 @@ const TrackListScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [isShuffling, setIsShuffling] = useState(false);
   const { downloadSong } = useContext(DownloadContext);
-  const { addToHistory } = useHistory();
+  const { addToHistory } = useHistory();//vikrant 
 
   useEffect(() => {
     const getTracks = async () => {
