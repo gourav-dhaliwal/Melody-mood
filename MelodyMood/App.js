@@ -6,12 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { View, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Contexts
 import { DownloadProvider } from './context/DownloadContext';
 import { LikedPlaylistsProvider } from './context/LikedPlaylistsContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { HistoryProvider } from './context/HistoryContext';
 
+// Screens
 import SignupScreen from './screens/SignupScreen';
 import LoginScreen from './screens/LoginScreen';
 import HomePage from './HomePage';
@@ -27,10 +29,17 @@ import HistoryScreen from './screens/HistoryScreen';
 import ProfileScreen from './ProfileScreen';
 import NotificationBanner from './NotificationBanner';
 
+// Onboarding Screens
+import OnboardingScreen1 from './screens/OnboardingScreen1';
+import OnboardingScreen2 from './screens/OnboardingScreen2';
+import OnboardingScreen3 from './screens/OnboardingScreen3';
 
+// Navigators
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+const RootStack = createStackNavigator();
 
+// Home Stack
 const HomeStack = () => (
   <Stack.Navigator initialRouteName="HomePage">
     <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
@@ -42,6 +51,7 @@ const HomeStack = () => (
   </Stack.Navigator>
 );
 
+// Playlists Stack
 const PlaylistsStack = () => (
   <Stack.Navigator initialRouteName="PlaylistsList">
     <Stack.Screen name="PlaylistsList" component={Playlists} options={{ headerShown: false }} />
@@ -58,6 +68,7 @@ const PlaylistsStack = () => (
   </Stack.Navigator>
 );
 
+// Main App Tab Navigator
 const AppNavigator = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -85,8 +96,7 @@ const AppNavigator = () => (
   </Tab.Navigator>
 );
 
-
-
+// Main App (Login / Signup / Main AppNavigator)
 const MainApp = () => {
   const { user } = useContext(AuthContext);
   const [showLogin, setShowLogin] = useState(true);
@@ -125,6 +135,43 @@ const MainApp = () => {
     : <SignupScreen switchToLogin={() => setShowLogin(true)} />;
 };
 
+// Root Navigator (Onboarding + MainApp)
+const RootNavigator = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      const seen = await AsyncStorage.getItem('hasSeenOnboarding');
+      setHasSeenOnboarding(seen === 'true');
+      setIsLoading(false);
+    };
+    checkOnboarding();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#1DB954" />
+      </View>
+    );
+  }
+
+  return (
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      {!hasSeenOnboarding ? (
+        <>
+          <RootStack.Screen name="Onboarding1" component={OnboardingScreen1} />
+          <RootStack.Screen name="Onboarding2" component={OnboardingScreen2} />
+          <RootStack.Screen name="Onboarding3" component={OnboardingScreen3} />
+        </>
+      ) : null}
+      <RootStack.Screen name="MainApp" component={MainApp} />
+    </RootStack.Navigator>
+  );
+};
+
+// App Component
 const App = () => (
   <AuthProvider>
     <DownloadProvider>
@@ -134,7 +181,7 @@ const App = () => (
             <NavigationContainer>
               <View style={{ flex: 1 }}>
                 <NotificationBanner />
-                <MainApp />
+                <RootNavigator />
               </View>
             </NavigationContainer>
           </HistoryProvider>
@@ -143,6 +190,5 @@ const App = () => (
     </DownloadProvider>
   </AuthProvider>
 );
+
 export default App;
-
-
