@@ -9,8 +9,10 @@ import {
   Image,
   ScrollView,
   Dimensions,
-  SafeAreaView
+  SafeAreaView,
+  Share,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { fetchMoodPlaylists } from './utils/spotifyApi';
 import { LikedPlaylistsContext } from './context/LikedPlaylistsContext';
 import { NotificationContext } from './context/NotificationContext';
@@ -55,6 +57,18 @@ const Playlists = ({ navigation }) => {
     }
   };
 
+  const onShare = async (playlist) => {
+    try {
+      await Share.share({
+        message: `Check out this playlist: ${playlist.name} 🎵\nhttps://open.spotify.com/playlist/${playlist.id}`,
+        url: `https://open.spotify.com/playlist/${playlist.id}`,
+        title: playlist.name,
+      });
+    } catch (error) {
+      console.error('Error sharing playlist:', error.message);
+    }
+  };
+
   const renderPlaylistItem = ({ item, moodColor }) => {
     const isLiked = likedPlaylists.some(p => p.id === item.id);
 
@@ -77,27 +91,37 @@ const Playlists = ({ navigation }) => {
             {item.name}
           </Text>
           <Text style={styles.trackCount}>{item.tracks?.total || 0} tracks</Text>
-          <TouchableOpacity
-            style={styles.likeBtn}
-            onPress={() => {
-              toggleLike({
-                id: item.id,
-                name: item.name,
-                image: item.images?.[0]?.url || '',
-              });
+          <View style={{ flexDirection: 'row', marginTop: 4, alignItems: 'center' }}>
+            <TouchableOpacity
+              style={[styles.likeBtn, { marginRight: 16 }]}
+              onPress={() => {
+                toggleLike({
+                  id: item.id,
+                  name: item.name,
+                  image: item.images?.[0]?.url || '',
+                });
 
-              const isLiked = likedPlaylists.some(p => p.id === item.id);
-              if (!isLiked) {
-                addNotification(`You liked the playlist "${item.name}"`);
-              } else {
-                addNotification(`You unliked the playlist "${item.name}"`);
-              }
-            }}
-          >
-            <Text style={[styles.likeText, isLiked && { color: '#1DB954' }]}>
-              {isLiked ? '♥ Liked' : '♡ Like'}
-            </Text>
-          </TouchableOpacity>
+                const isLikedNow = likedPlaylists.some(p => p.id === item.id);
+                if (!isLikedNow) {
+                  addNotification(`You liked the playlist "${item.name}"`);
+                } else {
+                  addNotification(`You unliked the playlist "${item.name}"`);
+                }
+              }}
+            >
+              <Text style={[styles.likeText, isLiked && { color: '#1DB954' }]}>
+                {isLiked ? '♥ Liked' : '♡ Like'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.likeBtn, { flexDirection: 'row', alignItems: 'center' }]}
+              onPress={() => onShare(item)}
+            >
+              <Ionicons name="share-social-outline" size={16} color="#999" style={{ marginRight: 6 }} />
+              <Text style={styles.likeText}>Share</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -146,7 +170,6 @@ const Playlists = ({ navigation }) => {
         <View style={styles.header}>
           <Text style={styles.mainTitle}>🎵 Mood Playlists</Text>
           <Text style={styles.subtitle}>Find the perfect soundtrack for your feelings</Text>
-
         </View>
 
         {moods.map((mood) => renderMoodSection(mood))}
