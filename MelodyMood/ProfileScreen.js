@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Buffer } from 'buffer';
 import { AuthContext } from './context/AuthContext';
+import { ThemeContext } from './ThemeContext';
 
 global.Buffer = Buffer;
 
@@ -27,39 +28,35 @@ const CLIENT_SECRET = 'd9d344d4f89947dfa826698d127ee783';
 
 const ProfileScreen = () => {
   const { user, logout } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
+
+  const themed = {
+    background: { backgroundColor: theme.background },
+    card: { backgroundColor: theme.card },
+    text: { color: theme.text },
+    border: { borderColor: theme.border || '#ddd' },
+  };
+
   const [playlists, setPlaylists] = useState([]);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [spotifyUrl, setSpotifyUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    console.log('Logged in user:', user); // Debug to check user object
-  }, [user]);
-
   const getSpotifyToken = async () => {
     const creds = `${CLIENT_ID}:${CLIENT_SECRET}`;
     const encodedCreds = Buffer.from(creds).toString('base64');
 
-    try {
-      const response = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Basic ${encodedCreds}`,
-        },
-        body: 'grant_type=client_credentials',
-      });
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${encodedCreds}`,
+      },
+      body: 'grant_type=client_credentials',
+    });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch Spotify token');
-      }
-
-      const data = await response.json();
-      return data.access_token;
-    } catch (error) {
-      console.error('Error fetching token:', error);
-      throw error;
-    }
+    const data = await response.json();
+    return data.access_token;
   };
 
   const fetchTrackInfo = async (token, trackUrlOrId) => {
@@ -70,29 +67,18 @@ const ProfileScreen = () => {
       trackId = parts[1].split('?')[0];
     }
 
-    try {
-      const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch track info. Check the URL or try again.');
-      }
-
-      const track = await response.json();
-      return {
-        id: track.id,
-        name: track.name,
-        artist: track.artists.map((a) => a.name).join(', '),
-        image: track.album.images[0]?.url,
-        url: track.external_urls.spotify,
-      };
-    } catch (error) {
-      console.error('Error fetching track info:', error);
-      throw error;
-    }
+    const track = await response.json();
+    return {
+      id: track.id,
+      name: track.name,
+      artist: track.artists.map((a) => a.name).join(', '),
+      image: track.album.images[0]?.url,
+      url: track.external_urls.spotify,
+    };
   };
 
   const handleAddPlaylist = () => {
@@ -144,23 +130,15 @@ const ProfileScreen = () => {
   };
 
   const openSpotify = (url) => {
-    Linking.canOpenURL(url)
-      .then((supported) => {
-        if (supported) {
-          Linking.openURL(url);
-        } else {
-          Alert.alert('Error', 'Cannot open URL');
-        }
-      })
-      .catch((err) => console.error('Error opening URL:', err));
+    Linking.openURL(url).catch(() => Alert.alert('Error', 'Cannot open URL'));
   };
 
   const renderSong = ({ item, playlistId }) => (
-    <View style={styles.songCard}>
+    <View style={[styles.songCard, themed.card]}>
       <Image source={{ uri: item.image }} style={styles.songImage} />
       <View style={styles.songInfo}>
-        <Text style={styles.songName}>{item.name}</Text>
-        <Text style={styles.songArtist}>{item.artist}</Text>
+        <Text style={[styles.songName, themed.text]}>{item.name}</Text>
+        <Text style={[styles.songArtist, themed.text]}>{item.artist}</Text>
       </View>
       <View style={styles.songButtons}>
         <TouchableOpacity onPress={() => openSpotify(item.url)}>
@@ -174,14 +152,15 @@ const ProfileScreen = () => {
   );
 
   const renderPlaylist = ({ item }) => (
-    <View style={styles.playlistCard}>
-      <Text style={styles.playlistTitle}>{item.name}</Text>
+    <View style={[styles.playlistCard, themed.card]}>
+      <Text style={[styles.playlistTitle, themed.text]}>{item.name}</Text>
 
       <TextInput
         placeholder="Track URL or ID"
+        placeholderTextColor="#aaa"
         value={spotifyUrl}
         onChangeText={setSpotifyUrl}
-        style={styles.input}
+        style={[styles.input, themed.text, themed.card, themed.border]}
       />
       <TouchableOpacity
         style={styles.addSongButton}
@@ -190,7 +169,7 @@ const ProfileScreen = () => {
         <Text style={styles.addSongButtonText}>Add Song</Text>
       </TouchableOpacity>
 
-      <Text style={styles.songsHeading}>Songs</Text>
+      <Text style={[styles.songsHeading, themed.text]}>Songs</Text>
 
       {item.songs.length === 0 ? (
         <Text style={styles.noSongsText}>No songs added yet.</Text>
@@ -206,16 +185,10 @@ const ProfileScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Text style={styles.userText}>
-          {user?.name
-            ? `Logged in as: ${user.name}`
-            : user?.username
-            ? `Logged in as: ${user.username}`
-            : user?.email
-            ? `User: ${user.email}`
-            : 'Welcome!'}
+    <SafeAreaView style={[styles.safeArea, themed.background]}>
+      <View style={[styles.header, themed.card]}>
+        <Text style={[styles.userText, themed.text]}>
+          {user?.name || user?.username || user?.email || 'Welcome!'}
         </Text>
         <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
           <Text style={styles.logoutBtnText}>Logout</Text>
@@ -224,8 +197,9 @@ const ProfileScreen = () => {
 
       <View style={styles.newPlaylistSection}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, themed.text, themed.card, themed.border]}
           placeholder="New Playlist Name"
+          placeholderTextColor="#aaa"
           value={newPlaylistName}
           onChangeText={setNewPlaylistName}
         />
@@ -253,12 +227,8 @@ const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
+  safeArea: { flex: 1 },
   header: {
-    backgroundColor: '#fff',
     paddingVertical: 20,
     paddingHorizontal: 16,
     borderBottomLeftRadius: 25,
@@ -273,30 +243,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  userText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#2c3e50',
-  },
+  userText: { fontSize: 20, fontWeight: '600' },
   logoutBtn: {
     backgroundColor: '#ff5c5c',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
   },
-  logoutBtnText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  newPlaylistSection: {
-    paddingHorizontal: 16,
-    marginBottom: 20,
-  },
+  logoutBtnText: { color: '#fff', fontWeight: '600' },
+  newPlaylistSection: { paddingHorizontal: 16, marginBottom: 20 },
   input: {
-    backgroundColor: '#fff',
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: '#ddd',
     paddingHorizontal: 15,
     paddingVertical: 10,
     fontSize: 16,
@@ -308,13 +266,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
   },
-  createPlaylistBtnText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
-  },
+  createPlaylistBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   playlistCard: {
-    backgroundColor: '#fff',
     marginBottom: 20,
     borderRadius: 20,
     padding: 16,
@@ -324,12 +277,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  playlistTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 12,
-    color: '#2c3e50',
-  },
+  playlistTitle: { fontSize: 22, fontWeight: '700', marginBottom: 12 },
   addSongButton: {
     backgroundColor: '#1DB954',
     borderRadius: 15,
@@ -337,66 +285,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  addSongButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  songsHeading: {
-    fontWeight: '700',
-    fontSize: 18,
-    marginBottom: 8,
-    color: '#34495e',
-  },
-  noSongsText: {
-    fontStyle: 'italic',
-    color: '#7f8c8d',
-  },
+  addSongButtonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  songsHeading: { fontWeight: '700', fontSize: 18, marginBottom: 8 },
+  noSongsText: { fontStyle: 'italic', color: '#7f8c8d' },
   songCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#eef5f4',
     padding: 12,
     borderRadius: 15,
     marginBottom: 10,
   },
-  songImage: {
-    width: 55,
-    height: 55,
-    borderRadius: 10,
-    marginRight: 12,
-  },
-  songInfo: {
-    flex: 1,
-  },
-  songName: {
-    fontWeight: '700',
-    fontSize: 16,
-    color: '#2c3e50',
-  },
-  songArtist: {
-    color: '#7f8c8d',
-    marginTop: 2,
-  },
-  songButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  playText: {
-    color: '#1DB954',
-    fontWeight: '700',
-    marginRight: 15,
-    fontSize: 14,
-  },
-  removeText: {
-    color: '#ff5c5c',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
+  songImage: { width: 55, height: 55, borderRadius: 10, marginRight: 12 },
+  songInfo: { flex: 1 },
+  songName: { fontWeight: '700', fontSize: 16 },
+  songArtist: { marginTop: 2 },
+  songButtons: { flexDirection: 'row', alignItems: 'center' },
+  playText: { color: '#1DB954', fontWeight: '700', marginRight: 15, fontSize: 14 },
+  removeText: { color: '#ff5c5c', fontWeight: '700', fontSize: 14 },
+  loadingContainer: { alignItems: 'center', marginBottom: 20 },
 });
 
 export default ProfileScreen;

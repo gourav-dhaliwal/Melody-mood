@@ -1,44 +1,32 @@
-// In HistoryScreen.js
-
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useHistory } from '../context/HistoryContext';
-const COLORS = {
-  background: '#FFFFFF',
-  text: '#000000',
-  subtext: '#666666',
-  card: '#F8F8F8',
-  divider: '#E0E0E0',
-  song: '#FF9F43',
-  playlist: '#4BC0C8',
-  danger: '#FF3B30'
-};
+import { ThemeContext } from '../ThemeContext';
+
 export default function HistoryScreen({ navigation }) {
-  const { history, clearHistory } = useHistory(); // <- Now includes clearHistory
+  const { history, clearHistory } = useHistory();
+  const { theme } = useContext(ThemeContext);
 
   const confirmClear = () => {
-  Alert.alert(
-    'Clear History',
-    'Are you sure you want to delete all playback history?',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Clear',
-        style: 'destructive',
-        onPress: () => {
-          clearHistory(); // <- Must be a function call with ()
+    Alert.alert(
+      'Clear History',
+      'Are you sure you want to delete all playback history?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => clearHistory()
         }
-      }
-    ]
-  );
-};
-
+      ]
+    );
+  };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Listening History</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Listening History</Text>
         {history.length > 0 && (
           <TouchableOpacity onPress={confirmClear}>
             <Ionicons name="trash-outline" size={24} color="#FF3B30" />
@@ -51,11 +39,14 @@ export default function HistoryScreen({ navigation }) {
         keyExtractor={(item, index) => `${item.id}-${item.timestamp}-${index}`}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={[styles.item, {
-              borderLeftWidth: 4,
-              borderLeftColor: item.type === 'song' ? '#FF9F43' : '#4BC0C8',
-              marginBottom: 8
-            }]}
+            style={[
+              styles.item,
+              {
+                backgroundColor: theme.card,
+                borderLeftWidth: 4,
+                borderLeftColor: item.type === 'song' ? '#FF9F43' : '#4BC0C8'
+              }
+            ]}
             onPress={() => navigation.navigate('TrackList', {
               playlistId: item.id,
               playlistName: item.name
@@ -68,13 +59,11 @@ export default function HistoryScreen({ navigation }) {
               style={styles.icon}
             />
             <View style={styles.textContainer}>
-              <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+              <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
               <View style={styles.details}>
-                <Text style={styles.detailText}>
-                  {item.type === 'song' ? 'Song' : 'Playlist'}
-                </Text>
-                <Text style={styles.dot}> • </Text>
-                <Text style={styles.detailText}>
+                <Text style={[styles.detailText, { color: theme.text }]}>{item.type === 'song' ? 'Song' : 'Playlist'}</Text>
+                <Text style={[styles.dot, { color: theme.text }]}> • </Text>
+                <Text style={[styles.detailText, { color: theme.text }]}>
                   {new Date(item.timestamp).toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit'
@@ -82,14 +71,14 @@ export default function HistoryScreen({ navigation }) {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#666" />
+            <Ionicons name="chevron-forward" size={18} color={theme.text} />
           </TouchableOpacity>
         )}
-        ItemSeparatorComponent={() => <View style={styles.divider} />}
+        ItemSeparatorComponent={() => <View style={[styles.divider, { backgroundColor: theme.text + '22' }]} />}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <Ionicons name="time-outline" size={48} color="#666666" />
-            <Text style={styles.emptyText}>No recent activity</Text>
+            <Ionicons name="time-outline" size={48} color={theme.text} />
+            <Text style={[styles.emptyText, { color: theme.text }]}>No recent activity</Text>
           </View>
         )}
       />
@@ -97,16 +86,13 @@ export default function HistoryScreen({ navigation }) {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
     paddingHorizontal: 16,
     paddingTop: 20
   },
   title: {
-    color: COLORS.text,
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
@@ -115,7 +101,6 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -124,6 +109,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
+    marginBottom: 8
   },
   icon: {
     marginRight: 12
@@ -132,7 +118,6 @@ const styles = StyleSheet.create({
     flex: 1
   },
   name: {
-    color: COLORS.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4
@@ -142,17 +127,14 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   detailText: {
-    color: COLORS.subtext,
     fontSize: 13
   },
   dot: {
-    color: COLORS.subtext,
     fontSize: 13,
     marginHorizontal: 4
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.divider,
     marginVertical: 8
   },
   emptyContainer: {
@@ -162,19 +144,15 @@ const styles = StyleSheet.create({
     padding: 40
   },
   headerRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: 20,
-  marginLeft: 8,
-  marginRight: 8
-},
-
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginLeft: 8,
+    marginRight: 8
+  },
   emptyText: {
-    color: COLORS.subtext,
     fontSize: 16,
     marginTop: 16
-  
   }
-  
 });

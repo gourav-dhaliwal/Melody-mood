@@ -15,14 +15,24 @@ import { fetchTracksFromPlaylist } from '../utils/spotifyApi.js';
 import { DownloadContext } from '../context/DownloadContext';
 import { useHistory } from '../context/HistoryContext';
 import { Ionicons } from '@expo/vector-icons';
+import { ThemeContext } from '../ThemeContext';
 
 const TrackListScreen = ({ route, navigation }) => {
   const { playlistId, playlistName } = route.params;
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isShuffling, setIsShuffling] = useState(false);
+
   const { downloadSong } = useContext(DownloadContext);
-  const { addToHistory } = useHistory(); // vikrant
+  const { addToHistory } = useHistory();
+  const { theme } = useContext(ThemeContext);
+
+  const themed = {
+    background: { backgroundColor: theme.background },
+    text: { color: theme.text },
+    card: { backgroundColor: theme.card },
+    border: { borderColor: theme.border || '#333' },
+  };
 
   useEffect(() => {
     const getTracks = async () => {
@@ -94,16 +104,16 @@ const TrackListScreen = ({ route, navigation }) => {
     if (!track) return null;
 
     return (
-      <View style={styles.trackItem}>
+      <View style={[styles.trackItem, themed.card, themed.border]}>
         <TouchableOpacity onPress={() => handleTrackPress(track)} style={styles.trackContent}>
           {track.album?.images?.[0]?.url && (
             <Image source={{ uri: track.album.images[0].url }} style={styles.albumArt} />
           )}
           <View style={styles.trackInfo}>
-            <Text style={styles.trackName} numberOfLines={1}>
+            <Text style={[styles.trackName, themed.text]} numberOfLines={1}>
               {track.name}
             </Text>
-            <Text style={styles.artistName} numberOfLines={1}>
+            <Text style={[styles.artistName, themed.text]} numberOfLines={1}>
               {track.artists.map((a) => a.name).join(', ')}
             </Text>
           </View>
@@ -124,32 +134,32 @@ const TrackListScreen = ({ route, navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, themed.background]}>
         <ActivityIndicator size="large" color="#1DB954" />
-        <Text style={styles.loadingText}>Loading tracks...</Text>
+        <Text style={[styles.loadingText, themed.text]}>Loading tracks...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerContainer}>
+    <View style={[styles.container, themed.background]}>
+      <View style={[styles.headerContainer, themed.card, themed.border]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color="#1DB954" />
         </TouchableOpacity>
-        <Text style={styles.header} numberOfLines={1}>
+        <Text style={[styles.header, themed.text]} numberOfLines={1}>
           {playlistName || 'Playlist Tracks'}
         </Text>
       </View>
 
-      <View style={styles.controlBar}>
+      <View style={[styles.controlBar, themed.card, themed.border]}>
         <TouchableOpacity onPress={() => setIsShuffling((prev) => !prev)} style={styles.controlButton}>
           <Ionicons
             name={isShuffling ? 'shuffle' : 'shuffle-outline'}
             size={24}
-            color={isShuffling ? '#1DB954' : '#fff'}
+            color={isShuffling ? '#1DB954' : theme.text}
           />
-          <Text style={styles.controlLabel}>Shuffle</Text>
+          <Text style={[styles.controlLabel, themed.text]}>Shuffle</Text>
         </TouchableOpacity>
       </View>
 
@@ -160,7 +170,7 @@ const TrackListScreen = ({ route, navigation }) => {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No tracks found in this playlist</Text>
+            <Text style={[styles.emptyText, themed.text]}>No tracks found in this playlist</Text>
           </View>
         }
       />
@@ -169,30 +179,27 @@ const TrackListScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+  container: { flex: 1 },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
   },
   backButton: { marginRight: 15 },
-  header: { flex: 1, fontSize: 18, fontWeight: 'bold', color: 'white' },
+  header: { flex: 1, fontSize: 18, fontWeight: 'bold' },
   controlBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#2a2a2a',
   },
   controlButton: { alignItems: 'center' },
-  controlLabel: { fontSize: 12, color: '#ccc', marginTop: 4 },
+  controlLabel: { fontSize: 12, marginTop: 4 },
   trackItem: {
     flexDirection: 'row',
     padding: 15,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#333',
     alignItems: 'center',
   },
   trackContent: {
@@ -207,24 +214,23 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   trackInfo: { flex: 1 },
-  trackName: { fontSize: 16, fontWeight: '600', color: 'white' },
-  artistName: { fontSize: 14, color: '#b3b3b3', marginTop: 4 },
+  trackName: { fontSize: 16, fontWeight: '600' },
+  artistName: { fontSize: 14, marginTop: 4 },
   downloadButton: { padding: 8 },
   listContent: { paddingBottom: 20 },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#121212',
   },
-  loadingText: { marginTop: 10, fontSize: 16, color: '#b3b3b3' },
+  loadingText: { marginTop: 10, fontSize: 16 },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  emptyText: { fontSize: 16, color: '#b3b3b3', textAlign: 'center' },
+  emptyText: { fontSize: 16, textAlign: 'center' },
 });
 
 export default TrackListScreen;

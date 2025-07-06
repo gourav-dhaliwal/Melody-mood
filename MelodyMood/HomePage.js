@@ -14,8 +14,9 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { NotificationContext } from './context/NotificationContext';
-import { AuthContext } from './context/AuthContext';
+import { ThemeContext } from './ThemeContext';
 import { searchArtist, searchTracks } from './utils/spotifyApi';
 import { useHistory } from './context/HistoryContext';
 
@@ -24,12 +25,14 @@ const HomePage = () => {
   const [results, setResults] = useState([]);
   const [searchHistory, setSearchHistory] = useState([]);
   const [mainMenuVisible, setMainMenuVisible] = useState(false);
-  const navigation = useNavigation();
-  const { addNotification } = useContext(NotificationContext);
-  const { logout } = useContext(AuthContext);
+  const [themeModalVisible, setThemeModalVisible] = useState(false);
   const [followedArtists, setFollowedArtists] = useState([]);
   const [songHistory, setSongHistory] = useState([]);
+
+  const navigation = useNavigation();
+  const { addNotification } = useContext(NotificationContext);
   const { addToHistory } = useHistory();
+  const { themeName, theme, changeTheme } = useContext(ThemeContext);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -108,11 +111,11 @@ const HomePage = () => {
     };
 
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: theme.card }]}>
         <Image source={{ uri: imageUrl }} style={styles.image} />
         <View style={styles.details}>
-          <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-          <Text style={styles.subText} numberOfLines={1}>
+          <Text style={[styles.name, { color: theme.text }]}>{item.name}</Text>
+          <Text style={[styles.subText, { color: theme.text }]}>
             {isArtist ? 'Artist' : `Song by ${item.artists?.[0]?.name}`}
           </Text>
         </View>
@@ -153,12 +156,16 @@ const HomePage = () => {
         onPress={() => setMainMenuVisible(false)}
       >
         <View style={styles.smallSidebarMenu}>
-          {['Downloaded', 'LikedPlaylists', 'Notifications', 'History'].map((screen) => (
+          {['Downloaded', 'LikedPlaylists', 'Notifications', 'History', 'Theme'].map((screen) => (
             <TouchableOpacity
               key={screen}
               style={styles.modalOption}
               onPress={() => {
-                navigation.navigate(screen);
+                if (screen === 'Theme') {
+                  setThemeModalVisible(true);
+                } else {
+                  navigation.navigate(screen);
+                }
                 setMainMenuVisible(false);
               }}
             >
@@ -170,15 +177,45 @@ const HomePage = () => {
     </Modal>
   );
 
+  const renderThemeModal = () => (
+    <Modal
+      visible={themeModalVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setThemeModalVisible(false)}
+    >
+      <Pressable
+        style={styles.modalOverlay}
+        onPress={() => setThemeModalVisible(false)}
+      >
+        <View style={styles.smallSidebarMenu}>
+          {['light', 'dark', 'colorful'].map((option) => (
+            <TouchableOpacity
+              key={option}
+              style={styles.modalOption}
+              onPress={() => {
+                changeTheme(option);
+                setThemeModalVisible(false);
+                addNotification(`Theme changed to ${option}`);
+              }}
+            >
+              <Text style={styles.modalText}>{option.toUpperCase()}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Pressable>
+    </Modal>
+  );
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Melody Mood</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.header }]}>
+        <Text style={[styles.headerTitle, { color: theme.headerText }]}>Melody Mood</Text>
         <TouchableOpacity
           style={styles.menuIcon}
           onPress={() => setMainMenuVisible(true)}
         >
-          <Ionicons name="ellipsis-vertical" size={24} color="white" />
+          <Ionicons name="ellipsis-vertical" size={24} color={theme.headerText} />
         </TouchableOpacity>
       </View>
 
@@ -199,29 +236,6 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
-      {searchHistory.length > 0 && (
-        <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
-          <Text style={{ fontWeight: 'bold', marginBottom: 6 }}>Recent Searches:</Text>
-          <FlatList
-            data={searchHistory}
-            horizontal
-            keyExtractor={(item, index) => `${item}-${index}`}
-            renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => setQuery(item)}>
-                <View style={{ padding: 8, marginHorizontal: 4, backgroundColor: '#e9ecef', borderRadius: 20 }}>
-                  <Text>{item}</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-            ListHeaderComponent={
-              <TouchableOpacity onPress={clearHistory}>
-                <Text style={{ color: 'red', marginRight: 10 }}>Clear</Text>
-              </TouchableOpacity>
-            }
-          />
-        </View>
-      )}
-
       <FlatList
         data={results}
         keyExtractor={(item) => item.id}
@@ -230,17 +244,16 @@ const HomePage = () => {
       />
 
       {renderMenu()}
+      {renderThemeModal()}
     </View>
   );
 };
 
 export default HomePage;
 
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
+  container: { flex: 1 },
   header: {
-    backgroundColor: '#1DB954',
     paddingTop: 50,
     paddingBottom: 24,
     paddingHorizontal: 20,
@@ -250,93 +263,67 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
-  headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#fff', letterSpacing: 0.5 },
-  menuIcon: { padding: 8, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)' },
-  input: {
-    margin: 16,
+  headerTitle: { fontSize: 28, fontWeight: 'bold', letterSpacing: 0.5 },
+  menuIcon: { padding: 8, borderRadius: 20 },
+  inputWrapper: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    position: 'relative',
+  },
+  inputWithIcon: {
     padding: 10,
+    paddingRight: 40,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
     backgroundColor: '#fff',
   },
-  openBtn: {
-  backgroundColor: '#1DB954',
-  marginTop: 8,
-},
-
- card: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  padding: 12,
-  marginHorizontal: 16,
-  marginBottom: 8,
-  borderRadius: 10,
-  backgroundColor: '#fff',
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 3,
-},
-
-image: {
-  width: 50,
-  height: 50,
-  borderRadius: 25,
-  marginRight: 12,
-},
- details: {
-  flex: 1,
-  justifyContent: 'center',
-},
-
-name: {
-  fontSize: 16,
-  fontWeight: 'bold',
-  color: '#333',
-},
-  followBtn: {
-    marginTop: 8,
+  iconWrapper: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+    height: 20,
+    width: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  image: { width: 50, height: 50, borderRadius: 25, marginRight: 12 },
+  details: { flex: 1, justifyContent: 'center' },
+  name: { fontSize: 16, fontWeight: 'bold' },
+  subText: { fontSize: 13 },
+  smallBtn: {
     paddingVertical: 6,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 70,
+    marginLeft: 8,
+  },
+  followBtn: { backgroundColor: '#1DB954' },
+  unfollowBtn: { backgroundColor: '#d9534f' },
+  playBtn: {
+    backgroundColor: '#1DB954',
+    minWidth: 40,
+    paddingHorizontal: 10,
     borderRadius: 20,
   },
-  subText: {
-  fontSize: 13,
-  color: '#777',
-},
-inputWrapper: {
-  marginHorizontal: 16,
-  marginTop: 16,
-  marginBottom: 8,
-  position: 'relative',
-},
-
-inputWithIcon: {
-  padding: 10,
-  paddingRight: 40, // space for icon
-  borderWidth: 1,
-  borderColor: '#ccc',
-  borderRadius: 10,
-  backgroundColor: '#fff',
-},
-
-iconWrapper: {
-  position: 'absolute',
-  right: 12,
-  top: '50%',
-  transform: [{ translateY: -10 }],
-  height: 20,
-  width: 20,
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-
-
-  follow: { backgroundColor: '#1DB954' },
-  unfollow: { backgroundColor: '#d9534f' },
-  btnText: { color: '#fff', fontSize: 14 },
+  btnTextSmall: { color: '#fff', fontSize: 14, fontWeight: '600' },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -347,44 +334,13 @@ iconWrapper: {
   },
   smallSidebarMenu: {
     width: 220,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 8,
     borderWidth: 1,
     borderColor: '#e1e5e9',
   },
-  smallBtn: {
-  paddingVertical: 6,
-  paddingHorizontal: 12,
-  borderRadius: 20,
-  justifyContent: 'center',
-  alignItems: 'center',
-  minWidth: 70,
-  marginLeft: 8,
-},
-
-followBtn: {
-  backgroundColor: '#1DB954',
-},
-
-unfollowBtn: {
-  backgroundColor: '#d9534f',
-},
-
-playBtn: {
-  backgroundColor: '#1DB954',
-  minWidth: 40,
-  paddingHorizontal: 10,
-  borderRadius: 20,
-},
-
-btnTextSmall: {
-  color: '#fff',
-  fontSize: 14,
-  fontWeight: '600',
-  textAlign: 'center',
-},
   modalOption: {
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -393,5 +349,5 @@ btnTextSmall: {
     borderRadius: 8,
     marginVertical: 2,
   },
-  modalText: { color: '#2c3e50', fontSize: 17, fontWeight: '600' },
+  modalText: { fontSize: 17, fontWeight: '600' },
 });

@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { DownloadContext } from './context/DownloadContext';
+import { ThemeContext } from './ThemeContext';
 
 const formatDuration = (ms) => {
   const minutes = Math.floor(ms / 60000);
@@ -9,7 +10,8 @@ const formatDuration = (ms) => {
 };
 
 const SavedSongs = () => {
-  const { downloadedSongs } = useContext(DownloadContext); // you may want to rename this in context too
+  const { downloadedSongs } = useContext(DownloadContext);
+  const { theme } = useContext(ThemeContext);
 
   const renderItem = ({ item }) => {
     if (!item) return null;
@@ -25,24 +27,33 @@ const SavedSongs = () => {
     };
 
     return (
-      <TouchableOpacity style={styles.card} onPress={handlePress}>
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
+        onPress={handlePress}
+      >
         <Image
           source={{ uri: item.image || 'https://via.placeholder.com/100' }}
           style={styles.image}
         />
         <View style={styles.details}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.artist}>Artist: {item.artist || 'Unknown Artist'}</Text>
-          <Text style={styles.duration}>Duration: {item.duration ? formatDuration(item.duration) : 'Unknown'}</Text>
+          <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text style={[styles.artist, { color: theme.secondaryText }]} numberOfLines={1}>
+            Artist: {item.artist || 'Unknown Artist'}
+          </Text>
+          <Text style={[styles.duration, { color: theme.secondaryText }]}>
+            Duration: {item.duration ? formatDuration(item.duration) : 'Unknown'}
+          </Text>
         </View>
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {downloadedSongs.length === 0 ? (
-        <Text style={styles.emptyText}>No songs saved yet.</Text>
+        <Text style={[styles.emptyText, { color: theme.secondaryText }]}>No songs saved yet.</Text>
       ) : (
         <FlatList
           data={downloadedSongs}
@@ -60,27 +71,21 @@ export default SavedSongs;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
     paddingHorizontal: 16,
     paddingTop: 20,
   },
   card: {
-    backgroundColor: '#ffffff',
     borderRadius: 16,
     marginBottom: 12,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
   },
   image: {
     width: 80,
@@ -96,25 +101,21 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#212529',
     marginBottom: 6,
     lineHeight: 22,
   },
   artist: {
     fontSize: 14,
-    color: '#6c757d',
     marginBottom: 4,
     fontWeight: '500',
   },
   duration: {
     fontSize: 13,
-    color: '#868e96',
     fontWeight: '400',
   },
   emptyText: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#6c757d',
     marginTop: 60,
     fontWeight: '500',
   },

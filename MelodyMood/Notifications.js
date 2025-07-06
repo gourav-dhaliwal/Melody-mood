@@ -1,9 +1,12 @@
 import React, { useContext } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { NotificationContext } from './context/NotificationContext';
+import { ThemeContext } from './ThemeContext';
+
 
 const Notifications = () => {
   const { notifications } = useContext(NotificationContext);
+  const { theme } = useContext(ThemeContext);
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
@@ -13,7 +16,7 @@ const Notifications = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Text style={styles.header}>Notifications</Text>
       <FlatList
         data={notifications}

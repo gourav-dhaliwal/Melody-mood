@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { fetchMoodPlaylists } from './utils/spotifyApi';
 import { LikedPlaylistsContext } from './context/LikedPlaylistsContext';
 import { NotificationContext } from './context/NotificationContext';
+import { ThemeContext } from './ThemeContext';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = (width - 48) / 2;
@@ -26,6 +27,7 @@ const Playlists = ({ navigation }) => {
 
   const { likedPlaylists, toggleLike } = useContext(LikedPlaylistsContext);
   const { addNotification } = useContext(NotificationContext);
+  const { theme } = useContext(ThemeContext);
 
   const moods = [
     { name: 'Happy', emoji: '😊', color: '#FFD700' },
@@ -43,7 +45,6 @@ const Playlists = ({ navigation }) => {
   const loadAllMoodPlaylists = async () => {
     setLoading(true);
     const allPlaylists = {};
-
     try {
       for (const mood of moods) {
         const playlists = await fetchMoodPlaylists(mood.name);
@@ -74,7 +75,7 @@ const Playlists = ({ navigation }) => {
 
     return (
       <TouchableOpacity
-        style={[styles.playlistCard, { borderLeftColor: moodColor }]}
+        style={[styles.playlistCard, { backgroundColor: theme.card, borderLeftColor: moodColor }]}
         onPress={() =>
           navigation.navigate('TrackList', {
             playlistId: item.id,
@@ -87,10 +88,12 @@ const Playlists = ({ navigation }) => {
           style={styles.playlistImage}
         />
         <View style={styles.playlistInfo}>
-          <Text style={styles.playlistName} numberOfLines={2}>
+          <Text style={[styles.playlistName, { color: theme.text }]} numberOfLines={2}>
             {item.name}
           </Text>
-          <Text style={styles.trackCount}>{item.tracks?.total || 0} tracks</Text>
+          <Text style={[styles.trackCount, { color: theme.text }]}>
+            {item.tracks?.total || 0} tracks
+          </Text>
           <View style={{ flexDirection: 'row', marginTop: 4, alignItems: 'center' }}>
             <TouchableOpacity
               style={[styles.likeBtn, { marginRight: 16 }]}
@@ -154,28 +157,28 @@ const Playlists = ({ navigation }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#1DB954" />
-          <Text style={styles.loadingText}>Loading mood playlists...</Text>
-          <Text style={styles.loadingSubText}>Discovering your perfect vibes ✨</Text>
+          <Text style={[styles.loadingText, { color: theme.text }]}>Loading mood playlists...</Text>
+          <Text style={[styles.loadingSubText, { color: theme.text }]}>Discovering your perfect vibes ✨</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.mainTitle}>🎵 Mood Playlists</Text>
-          <Text style={styles.subtitle}>Find the perfect soundtrack for your feelings</Text>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <ScrollView style={[styles.container, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
+        <View style={[styles.header, { backgroundColor: theme.card }]}>
+          <Text style={[styles.mainTitle, { color: theme.text }]}>🎵 Mood Playlists</Text>
+          <Text style={[styles.subtitle, { color: theme.text }]}>Find the perfect soundtrack for your feelings</Text>
         </View>
 
         {moods.map((mood) => renderMoodSection(mood))}
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Powered by Spotify 🎶</Text>
+          <Text style={[styles.footerText, { color: theme.text }]}>Powered by Spotify 🎶</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -183,19 +186,12 @@ const Playlists = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
+  safeArea: { flex: 1 },
+  container: { flex: 1 },
   header: {
     paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 10,
-    backgroundColor: '#fff',
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
     shadowColor: '#000',
@@ -204,59 +200,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  mainTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#2c3e50',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#7f8c8d',
-    marginBottom: 10,
-  },
-  manageButton: {
-    backgroundColor: '#1DB954',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    marginTop: 15,
-    marginBottom: 10,
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  manageButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2c3e50',
-  },
-  loadingSubText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: '#7f8c8d',
-  },
-  moodSection: {
-    marginTop: 25,
-    marginHorizontal: 16,
-  },
+  mainTitle: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
+  subtitle: { fontSize: 16, textAlign: 'center', marginBottom: 10 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 16, fontSize: 18, fontWeight: '600' },
+  loadingSubText: { marginTop: 8, fontSize: 14 },
+  moodSection: { marginTop: 25, marginHorizontal: 16 },
   moodHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -270,26 +219,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
-  moodEmoji: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  moodTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    flex: 1,
-  },
-  playlistGrid: {
-    paddingHorizontal: 4,
-  },
-  row: {
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
+  moodEmoji: { fontSize: 24, marginRight: 12 },
+  moodTitle: { fontSize: 20, fontWeight: 'bold', flex: 1 },
+  playlistGrid: { paddingHorizontal: 4 },
+  row: { justifyContent: 'space-between', marginBottom: 16 },
   playlistCard: {
     width: ITEM_WIDTH,
-    backgroundColor: '#fff',
     borderRadius: 15,
     padding: 12,
     shadowColor: '#000',
@@ -300,45 +235,14 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     marginHorizontal: 4,
   },
-  playlistImage: {
-    width: '100%',
-    height: 120,
-    borderRadius: 10,
-    marginBottom: 10,
-    backgroundColor: '#f0f0f0',
-  },
-  playlistInfo: {
-    alignItems: 'center',
-  },
-  playlistName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2c3e50',
-    textAlign: 'center',
-    marginBottom: 6,
-    lineHeight: 18,
-  },
-  trackCount: {
-    fontSize: 12,
-    color: '#7f8c8d',
-    fontWeight: '500',
-  },
-  likeBtn: {
-    marginTop: 4,
-  },
-  likeText: {
-    fontSize: 14,
-    color: '#999',
-  },
-  footer: {
-    paddingVertical: 30,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#7f8c8d',
-    fontStyle: 'italic',
-  },
+  playlistImage: { width: '100%', height: 120, borderRadius: 10, marginBottom: 10 },
+  playlistInfo: { alignItems: 'center' },
+  playlistName: { fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 6, lineHeight: 18 },
+  trackCount: { fontSize: 12, fontWeight: '500' },
+  likeBtn: { marginTop: 4 },
+  likeText: { fontSize: 14, color: '#999' },
+  footer: { paddingVertical: 30, alignItems: 'center' },
+  footerText: { fontSize: 14, fontStyle: 'italic' },
 });
 
 export default Playlists;

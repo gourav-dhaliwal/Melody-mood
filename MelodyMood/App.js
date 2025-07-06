@@ -28,6 +28,8 @@ import Notifications from './Notifications';
 import HistoryScreen from './screens/HistoryScreen';
 import ProfileScreen from './ProfileScreen';
 import NotificationBanner from './NotificationBanner';
+import { ThemeProvider } from './ThemeContext';
+import { ThemeContext } from './ThemeContext';
 
 // Onboarding Screens
 import OnboardingScreen1 from './screens/OnboardingScreen1';
@@ -48,6 +50,7 @@ const HomeStack = () => (
     <Stack.Screen name="LikedPlaylists" component={LikedPlaylistsScreen} options={{ headerTitle: 'Liked Playlists' }} />
     <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: 'Notifications' }} />
     <Stack.Screen name="History" component={HistoryScreen} options={{ headerTitle: 'Listening History' }} />
+    <Stack.Screen name="Change Theme" component={ThemeContext} options={{ headerTitle: 'Theme' }} />
   </Stack.Navigator>
 );
 
@@ -171,19 +174,23 @@ const RootNavigator = () => {
   );
 };
 
-// App Component
+
+
+
 const App = () => (
   <AuthProvider>
     <DownloadProvider>
       <LikedPlaylistsProvider>
         <NotificationProvider>
           <HistoryProvider>
-            <NavigationContainer>
-              <View style={{ flex: 1 }}>
-                <NotificationBanner />
-                <RootNavigator />
-              </View>
-            </NavigationContainer>
+            <ThemeProvider>
+              <NavigationContainer>
+                <View style={{ flex: 1 }}>
+                  <NotificationBanner />
+                  <RootNavigator />
+                </View>
+              </NavigationContainer>
+            </ThemeProvider>
           </HistoryProvider>
         </NotificationProvider>
       </LikedPlaylistsProvider>
@@ -192,3 +199,5 @@ const App = () => (
 );
 
 export default App;
+
+

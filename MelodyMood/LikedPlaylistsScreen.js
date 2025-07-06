@@ -1,13 +1,18 @@
 import React, { useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { LikedPlaylistsContext } from './context/LikedPlaylistsContext';
+import { ThemeContext } from './ThemeContext';
+
+
 
 const LikedPlaylistsScreen = ({ navigation }) => {
+  const { theme } = useContext(ThemeContext);
+
   const { likedPlaylists } = useContext(LikedPlaylistsContext);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card,{ backgroundColor: theme.card, borderColor: theme.text + '20' }]}
       onPress={() =>
         navigation.navigate('TrackList', {
           playlistId: item.id,
@@ -23,7 +28,7 @@ const LikedPlaylistsScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {likedPlaylists.length === 0 ? (
         <Text style={styles.empty}>No liked playlists yet.</Text>
       ) : (
@@ -42,12 +47,11 @@ export default LikedPlaylistsScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
     paddingHorizontal: 16,
     paddingTop: 20,
   },
   card: {
-    backgroundColor: '#ffffff',
+
     borderRadius: 16,
     marginBottom: 12,
     padding: 16,
@@ -68,7 +72,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 12,
-    backgroundColor: '#e9ecef',
     marginRight: 16,
   },
   info: {
@@ -78,13 +81,11 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#212529',
     lineHeight: 22,
   },
   empty: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#6c757d',
     marginTop: 60,
     fontWeight: '500',
   },
