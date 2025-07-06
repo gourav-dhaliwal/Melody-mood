@@ -1,5 +1,16 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Linking, ActivityIndicator, StyleSheet, Image, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Linking,
+  ActivityIndicator,
+  StyleSheet,
+  Image,
+  Alert,
+  Share,
+} from 'react-native';
 import { fetchTracksFromPlaylist } from '../utils/spotifyApi.js';
 import { DownloadContext } from '../context/DownloadContext';
 import { useHistory } from '../context/HistoryContext';
@@ -11,7 +22,7 @@ const TrackListScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [isShuffling, setIsShuffling] = useState(false);
   const { downloadSong } = useContext(DownloadContext);
-  const { addToHistory } = useHistory();//vikrant 
+  const { addToHistory } = useHistory(); // vikrant
 
   useEffect(() => {
     const getTracks = async () => {
@@ -26,7 +37,7 @@ const TrackListScreen = ({ route, navigation }) => {
             id: playlistId,
             name: playlistName,
             type: 'playlist',
-            image: data[0].track?.album?.images?.[0]?.url
+            image: data[0].track?.album?.images?.[0]?.url,
           });
         }
       } catch (error) {
@@ -67,6 +78,17 @@ const TrackListScreen = ({ route, navigation }) => {
     Alert.alert('Saved', `"${track.name}" has been added to your library.`);
   };
 
+  const handleSharePress = async (track) => {
+    try {
+      const message = `🎵 Check out this song: "${track.name}" by ${track.artists
+        .map((a) => a.name)
+        .join(', ')}\nListen here: ${track.external_urls?.spotify}`;
+      await Share.share({ message });
+    } catch (error) {
+      Alert.alert('Error', 'Unable to share the track.');
+    }
+  };
+
   const renderItem = ({ item }) => {
     const track = item.track;
     if (!track) return null;
@@ -78,16 +100,24 @@ const TrackListScreen = ({ route, navigation }) => {
             <Image source={{ uri: track.album.images[0].url }} style={styles.albumArt} />
           )}
           <View style={styles.trackInfo}>
-            <Text style={styles.trackName} numberOfLines={1}>{track.name}</Text>
+            <Text style={styles.trackName} numberOfLines={1}>
+              {track.name}
+            </Text>
             <Text style={styles.artistName} numberOfLines={1}>
-              {track.artists.map(a => a.name).join(', ')}
+              {track.artists.map((a) => a.name).join(', ')}
             </Text>
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => handleDownloadPress(track)} style={styles.downloadButton}>
-          <Ionicons name="download" size={20} color="#1DB954" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity onPress={() => handleDownloadPress(track)} style={styles.downloadButton}>
+            <Ionicons name="download" size={20} color="#1DB954" />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => handleSharePress(track)} style={styles.downloadButton}>
+            <Ionicons name="share-social" size={20} color="#1DB954" />
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -107,12 +137,18 @@ const TrackListScreen = ({ route, navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color="#1DB954" />
         </TouchableOpacity>
-        <Text style={styles.header} numberOfLines={1}>{playlistName || 'Playlist Tracks'}</Text>
+        <Text style={styles.header} numberOfLines={1}>
+          {playlistName || 'Playlist Tracks'}
+        </Text>
       </View>
 
       <View style={styles.controlBar}>
-        <TouchableOpacity onPress={() => setIsShuffling(prev => !prev)} style={styles.controlButton}>
-          <Ionicons name={isShuffling ? 'shuffle' : 'shuffle-outline'} size={24} color={isShuffling ? '#1DB954' : '#fff'} />
+        <TouchableOpacity onPress={() => setIsShuffling((prev) => !prev)} style={styles.controlButton}>
+          <Ionicons
+            name={isShuffling ? 'shuffle' : 'shuffle-outline'}
+            size={24}
+            color={isShuffling ? '#1DB954' : '#fff'}
+          />
           <Text style={styles.controlLabel}>Shuffle</Text>
         </TouchableOpacity>
       </View>
