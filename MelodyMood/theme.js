@@ -5,6 +5,7 @@ export const themes = {
       card: '#fff',
       header: '#1DB954',
       headerText: '#fff',
+      
     },
     dark: {
       background: '#222',
@@ -19,6 +20,7 @@ export const themes = {
       card: '#fff7f0',
       header: '#ff69b4',
       headerText: '#fff',
+
     },
   };
   

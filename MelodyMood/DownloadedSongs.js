@@ -53,7 +53,7 @@ const SavedSongs = () => {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {downloadedSongs.length === 0 ? (
-        <Text style={[styles.emptyText, { color: theme.secondaryText }]}>No songs saved yet.</Text>
+        <Text style={[styles.emptyText, { color: theme.background === '#222' ? '#eee' : theme.secondaryText }]}>No songs saved yet.</Text>
       ) : (
         <FlatList
           data={downloadedSongs}

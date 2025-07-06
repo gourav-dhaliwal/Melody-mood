@@ -112,7 +112,7 @@ const MoodJournal = () => {
                 ]}
                 multiline
                 placeholder="How are you feeling today?"
-                placeholderTextColor={theme.text + '77'}
+                placeholderTextColor={theme.background === '#222' ? '#bbbbbbcc' : theme.text + '77'}
                 value={journal}
                 onChangeText={setJournal}
               />

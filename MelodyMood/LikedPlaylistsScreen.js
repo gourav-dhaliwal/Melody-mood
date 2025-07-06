@@ -30,7 +30,12 @@ const LikedPlaylistsScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {likedPlaylists.length === 0 ? (
-        <Text style={styles.empty}>No liked playlists yet.</Text>
+        <Text
+        style={[
+          styles.empty,
+          { color: theme === 'dark' ? '#fff' : theme.text },
+        ]}
+      >No liked playlists yet.</Text>
       ) : (
         <FlatList
           data={likedPlaylists}
