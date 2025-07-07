@@ -1,3 +1,4 @@
+// your imports
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -137,7 +138,7 @@ const HomePage = () => {
             style={[styles.smallBtn, styles.playBtn]}
             onPress={handlePlay}
           >
-            <Text style={styles.btnTextSmall}>▶</Text>
+            <Text style={styles.btnTextSmall}>▶️</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -235,6 +236,35 @@ const HomePage = () => {
           <Ionicons name="search" size={20} color="#888" />
         </TouchableOpacity>
       </View>
+
+      {/* Search History Section */}
+      {searchHistory.length > 0 && (
+        <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: theme.text, fontSize: 16, fontWeight: '600' }}>Search History</Text>
+            <TouchableOpacity onPress={clearHistory}>
+              <Text style={{ color: 'red' }}>Clear</Text>
+            </TouchableOpacity>
+          </View>
+
+          {searchHistory.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => {
+                setQuery(item);
+                handleSearch();
+              }}
+              style={{
+                paddingVertical: 6,
+                borderBottomWidth: 1,
+                borderBottomColor: '#ddd',
+              }}
+            >
+              <Text style={{ color: theme.text }}>{item}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       <FlatList
         data={results}
