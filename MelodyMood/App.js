@@ -36,12 +36,10 @@ import OnboardingScreen1 from './screens/OnboardingScreen1';
 import OnboardingScreen2 from './screens/OnboardingScreen2';
 import OnboardingScreen3 from './screens/OnboardingScreen3';
 
-// Navigators
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 const RootStack = createStackNavigator();
 
-// Home Stack
 const HomeStack = () => (
   <Stack.Navigator initialRouteName="HomePage">
     <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
@@ -54,7 +52,6 @@ const HomeStack = () => (
   </Stack.Navigator>
 );
 
-// Playlists Stack
 const PlaylistsStack = () => (
   <Stack.Navigator initialRouteName="PlaylistsList">
     <Stack.Screen name="PlaylistsList" component={Playlists} options={{ headerShown: false }} />
@@ -71,7 +68,6 @@ const PlaylistsStack = () => (
   </Stack.Navigator>
 );
 
-// Main App Tab Navigator
 const AppNavigator = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -99,7 +95,6 @@ const AppNavigator = () => (
   </Tab.Navigator>
 );
 
-// Main App (Login / Signup / Main AppNavigator)
 const MainApp = () => {
   const { user } = useContext(AuthContext);
   const [showLogin, setShowLogin] = useState(true);
@@ -110,9 +105,7 @@ const MainApp = () => {
       try {
         const stored = await AsyncStorage.getItem('loggedInUser');
         if (stored) {
-          // Optional: setUser(JSON.parse(stored));
-        } else {
-          setShowLogin(true);
+          setShowLogin(false);
         }
       } catch (error) {
         console.error("Error fetching stored user:", error);
@@ -135,10 +128,9 @@ const MainApp = () => {
     ? <AppNavigator />
     : showLogin
     ? <LoginScreen switchToSignup={() => setShowLogin(false)} />
-    : <SignupScreen switchToLogin={() => setShowLogin(true)} />;
+    : <SignupScreen switchToLogin={() => setShowLogin(true)} setShowLogin={setShowLogin} />;
 };
 
-// Root Navigator (Onboarding + MainApp)
 const RootNavigator = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
@@ -174,9 +166,6 @@ const RootNavigator = () => {
   );
 };
 
-
-
-
 const App = () => (
   <AuthProvider>
     <DownloadProvider>
@@ -199,5 +188,3 @@ const App = () => (
 );
 
 export default App;
-
-

@@ -188,7 +188,7 @@ const ProfileScreen = () => {
     <SafeAreaView style={[styles.safeArea, themed.background]}>
       <View style={[styles.header, themed.card]}>
         <Text style={[styles.userText, themed.text]}>
-          {user?.name || user?.username || user?.email || 'Welcome!'}
+          Logged in as: {user?.email || user?.name || user?.username || 'Welcome!'}
         </Text>
         <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
           <Text style={styles.logoutBtnText}>Logout</Text>

@@ -1,72 +1,68 @@
+// context/AuthContext.js
 import React, { createContext, useEffect, useState } from 'react';
+import { auth } from '../utils/firebaseConfig';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // Check if user is remembered on app launch
   useEffect(() => {
-    const loadRememberedUser = async () => {
-      const rememberedEmail = await AsyncStorage.getItem('userEmail');
-      if (rememberedEmail) {
-        setUser(rememberedEmail);
-      }
-    };
-    loadRememberedUser();
-  }, []);
-
-  const login = async (email, password, rememberMe) => {
-    try {
-      const existing = await AsyncStorage.getItem('users');
-      const users = existing ? JSON.parse(existing) : [];
-
-      const matchedUser = users.find(
-        (u) => u.email === email && u.password === password
-      );
-
-      if (!matchedUser) {
-        Alert.alert('Login Failed', 'Invalid email or password');
-        return;
-      }
-
-      setUser(email);
-
-      if (rememberMe) {
-        await AsyncStorage.setItem('userEmail', email);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const remember = await AsyncStorage.getItem('rememberMe');
+        if (remember === 'true') {
+          setUser(firebaseUser);
+        }
       } else {
-        await AsyncStorage.removeItem('userEmail');
+        setUser(null);
       }
-    } catch (error) {
-      console.error('Login error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
+const login = async (email, password, rememberMe) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+    // ✅ Force immediate state update so UI switches to AppNavigator
+    setUser(userCredential.user);
+
+    if (rememberMe) {
+      await AsyncStorage.setItem('rememberMe', 'true');
+    } else {
+      await AsyncStorage.removeItem('rememberMe');
     }
-  };
+  } catch (e) {
+    alert('Login failed: ' + e.message);
+  }
+};
 
-  const signup = async (email, password) => {
-    try {
-      const existing = await AsyncStorage.getItem('users');
-      const users = existing ? JSON.parse(existing) : [];
 
-      const userExists = users.some((u) => u.email === email);
-      if (userExists) {
-        Alert.alert('Signup Failed', 'User already exists');
-        return;
-      }
 
-      users.push({ email, password });
-      await AsyncStorage.setItem('users', JSON.stringify(users));
-      setUser(email);
-    } catch (error) {
-      console.error('Signup error:', error);
-    }
-  };
+const signup = async (email, password) => {
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    return true; // indicate success
+  } catch (e) {
+    alert('Signup failed: ' + e.message);
+    return false; // indicate failure
+  }
+};
 
-  const logout = async () => {
-    setUser(null);
-    await AsyncStorage.removeItem('userEmail');
-  };
+const logout = async () => {
+  await signOut(auth);
+  await AsyncStorage.removeItem('rememberMe');
+  await AsyncStorage.removeItem('loggedInUser'); // 👈 clear stored flag
+  setUser(null);
+};
+
 
   return (
     <AuthContext.Provider value={{ user, login, signup, logout }}>

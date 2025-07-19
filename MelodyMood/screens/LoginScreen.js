@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Switch, Alert } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 
 const LoginScreen = ({ switchToSignup }) => {
@@ -9,8 +9,12 @@ const LoginScreen = ({ switchToSignup }) => {
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = () => {
-    if (!email || !password) return;
-    login(email, rememberMe);
+    if (!email || !password) {
+      Alert.alert('Missing Info', 'Please enter both email and password.');
+      return;
+    }
+
+    login(email, password, rememberMe);
   };
 
   return (
@@ -18,7 +22,7 @@ const LoginScreen = ({ switchToSignup }) => {
       <Text style={styles.title}>Login</Text>
 
       <TextInput
-        placeholder="Enter Email"
+        placeholder="Email"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
@@ -28,7 +32,7 @@ const LoginScreen = ({ switchToSignup }) => {
       />
 
       <TextInput
-        placeholder="Enter Password"
+        placeholder="Password"
         value={password}
         onChangeText={setPassword}
         style={styles.input}
