@@ -5,8 +5,10 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
+  Image,
   StyleSheet,
   Modal,
+  Pressable,
   Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -31,6 +33,8 @@ const dailySongList = [
   { id: '10', name: 'Someone You Loved', artist: 'Lewis Capaldi', url: 'https://open.spotify.com/track/7qEHsqek33rTcFNT9PFqLf' },
 ];
 
+const STORAGE_KEY_DAILY_SONG = 'dailySongData';
+
 const HomePage = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -40,9 +44,8 @@ const HomePage = () => {
   const [followedArtists, setFollowedArtists] = useState([]);
   const [songHistory, setSongHistory] = useState([]);
 
-  // No dailySong in state initially
-  const [dailySong, setDailySong] = useState(null);
   const [dailyModalVisible, setDailyModalVisible] = useState(false);
+  const [dailySong, setDailySong] = useState(null);
 
   const navigation = useNavigation();
   const { addNotification } = useContext(NotificationContext);
@@ -50,20 +53,42 @@ const HomePage = () => {
   const { themeName, theme, changeTheme } = useContext(ThemeContext);
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadHistory = async () => {
       const search = await AsyncStorage.getItem('searchHistory');
       const songs = await AsyncStorage.getItem('songHistory');
       if (search) setSearchHistory(JSON.parse(search));
       if (songs) setSongHistory(JSON.parse(songs));
     };
-    loadData();
+    loadHistory();
   }, []);
 
-  // Pick a random song and open modal every time user clicks
-  const onDiscoverPress = () => {
-    const randomSong = dailySongList[Math.floor(Math.random() * dailySongList.length)];
-    setDailySong(randomSong);
-    setDailyModalVisible(true);
+  const getTodayDateString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  const onDiscoverPress = async () => {
+    try {
+      const storedDataStr = await AsyncStorage.getItem(STORAGE_KEY_DAILY_SONG);
+      const todayStr = getTodayDateString();
+
+      if (storedDataStr) {
+        const storedData = JSON.parse(storedDataStr);
+        if (storedData.date === todayStr) {
+          setDailySong(storedData.song);
+          setDailyModalVisible(true);
+          return;
+        }
+      }
+
+      const randomSong = dailySongList[Math.floor(Math.random() * dailySongList.length)];
+      const newData = { date: todayStr, song: randomSong };
+      await AsyncStorage.setItem(STORAGE_KEY_DAILY_SONG, JSON.stringify(newData));
+      setDailySong(randomSong);
+      setDailyModalVisible(true);
+    } catch (error) {
+      console.error('Error fetching daily song:', error);
+    }
   };
 
   const handleSearch = async () => {
@@ -166,30 +191,66 @@ const HomePage = () => {
     );
   };
 
-  const renderDailySongModal = () => (
-    <Modal visible={dailyModalVisible} animationType="slide" transparent>
-      <View style={styles.modalOverlay}>
-        <View style={styles.dailyModal}>
-          {dailySong && (
-            <>
-              <Text style={styles.dailyTitle}>{dailySong.name}</Text>
-              <Text style={styles.dailyArtist}>by {dailySong.artist}</Text>
-              <TouchableOpacity
-                style={styles.dailyPlayBtn}
-                onPress={() => Linking.openURL(dailySong.url)}
-              >
-                <Text style={styles.btnTextSmall}>Play on Spotify</Text>
-              </TouchableOpacity>
-            </>
-          )}
-          <TouchableOpacity
-            style={[styles.dailyPlayBtn, { backgroundColor: '#ccc', marginTop: 10 }]}
-            onPress={() => setDailyModalVisible(false)}
-          >
-            <Text style={styles.btnTextSmall}>Close</Text>
-          </TouchableOpacity>
+  const renderMenu = () => (
+    <Modal
+      visible={mainMenuVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setMainMenuVisible(false)}
+    >
+      <Pressable
+        style={styles.modalOverlay}
+        onPress={() => setMainMenuVisible(false)}
+      >
+        <View style={styles.smallSidebarMenu}>
+          {['Downloaded', 'LikedPlaylists', 'Notifications', 'History', 'Theme'].map((screen) => (
+            <TouchableOpacity
+              key={screen}
+              style={styles.modalOption}
+              onPress={() => {
+                if (screen === 'Theme') {
+                  setThemeModalVisible(true);
+                } else {
+                  navigation.navigate(screen);
+                }
+                setMainMenuVisible(false);
+              }}
+            >
+              <Text style={styles.modalText}>{screen.replace(/([A-Z])/g, ' $1')}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      </View>
+      </Pressable>
+    </Modal>
+  );
+
+  const renderThemeModal = () => (
+    <Modal
+      visible={themeModalVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setThemeModalVisible(false)}
+    >
+      <Pressable
+        style={styles.modalOverlay}
+        onPress={() => setThemeModalVisible(false)}
+      >
+        <View style={styles.smallSidebarMenu}>
+          {['light', 'dark', 'colorful'].map((option) => (
+            <TouchableOpacity
+              key={option}
+              style={styles.modalOption}
+              onPress={() => {
+                changeTheme(option);
+                setThemeModalVisible(false);
+                addNotification(`Theme changed to ${option}`);
+              }}
+            >
+              <Text style={styles.modalText}>{option.toUpperCase()}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Pressable>
     </Modal>
   );
 
@@ -197,20 +258,22 @@ const HomePage = () => {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.header }]}>
         <Text style={[styles.headerTitle, { color: theme.headerText }]}>Melody Mood</Text>
-        <TouchableOpacity style={styles.menuIcon} onPress={() => setMainMenuVisible(true)}>
+        <TouchableOpacity
+          style={styles.menuIcon}
+          onPress={() => setMainMenuVisible(true)}
+        >
           <Ionicons name="ellipsis-vertical" size={24} color={theme.headerText} />
         </TouchableOpacity>
       </View>
 
-      {/* 🎵 Discover Random Song Button */}
+      {/* Discover New Song Button */}
       <TouchableOpacity
-        style={[styles.dailyPlayBtn, { margin: 16 }]}
+        style={[styles.smallBtn, { alignSelf: 'center', marginVertical: 16, backgroundColor: '#1DB954' }]}
         onPress={onDiscoverPress}
       >
         <Text style={styles.btnTextSmall}>🎵 Discover a New Song</Text>
       </TouchableOpacity>
 
-      {/* Search Input */}
       <View style={styles.inputWrapper}>
         <TextInput
           placeholder="Search for an artist or song..."
@@ -228,10 +291,9 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Search History */}
       {searchHistory.length > 0 && (
         <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={{ color: theme.text, fontSize: 16, fontWeight: '600' }}>Search History</Text>
             <TouchableOpacity onPress={clearHistory}>
               <Text style={{ color: 'red' }}>Clear</Text>
@@ -264,7 +326,42 @@ const HomePage = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {renderDailySongModal()}
+      {renderMenu()}
+      {renderThemeModal()}
+
+      {/* Daily Song Modal */}
+      <Modal
+        visible={dailyModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDailyModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlayCentered}
+          onPress={() => setDailyModalVisible(false)}
+        >
+          <View style={[styles.smallSidebarMenu, { padding: 24, width: 280, alignItems: 'center' }]}>
+            {dailySong && (
+              <>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 8 }}>{dailySong.name}</Text>
+                <Text style={{ fontSize: 18, marginBottom: 16 }}>by {dailySong.artist}</Text>
+                <TouchableOpacity
+                  style={[styles.smallBtn, { backgroundColor: '#1DB954' }]}
+                  onPress={() => Linking.openURL(dailySong.url)}
+                >
+                  <Text style={styles.btnTextSmall}>Play on Spotify</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.smallBtn, { backgroundColor: '#ccc', marginTop: 12 }]}
+                  onPress={() => setDailyModalVisible(false)}
+                >
+                  <Text style={[styles.btnTextSmall, { color: '#333' }]}>Close</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
@@ -284,6 +381,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
   headerTitle: { fontSize: 28, fontWeight: 'bold', letterSpacing: 0.5 },
+  menuIcon: { padding: 8, borderRadius: 20 },
   inputWrapper: {
     marginHorizontal: 16,
     marginTop: 16,
@@ -303,6 +401,10 @@ const styles = StyleSheet.create({
     right: 12,
     top: '50%',
     transform: [{ translateY: -10 }],
+    height: 20,
+    width: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   card: {
     flexDirection: 'row',
@@ -311,14 +413,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 8,
     borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   image: { width: 50, height: 50, borderRadius: 25, marginRight: 12 },
   details: { flex: 1, justifyContent: 'center' },
   name: { fontSize: 16, fontWeight: 'bold' },
   subText: { fontSize: 13 },
   smallBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -334,33 +441,36 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   btnTextSmall: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  dailyPlayBtn: {
-    backgroundColor: '#1DB954',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignSelf: 'center',
-  },
   modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+    paddingTop: 100,
+    paddingRight: 20,
+  },
+  modalOverlayCentered: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  dailyModal: {
+  smallSidebarMenu: {
     backgroundColor: '#fff',
-    padding: 24,
     borderRadius: 16,
-    width: 300,
-    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#e1e5e9',
+    // width adjusted where used inline
   },
-  dailyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
+  modalOption: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8f9fa',
+    borderRadius: 8,
+    marginVertical: 2,
   },
-  dailyArtist: {
-    fontSize: 16,
-    marginBottom: 16,
-  },
+  modalText: { fontSize: 17, fontWeight: '600' },
 });
