@@ -7,7 +7,8 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Modal,
+  Image,
+Modal,
   Pressable,
   Linking,
 } from 'react-native';
