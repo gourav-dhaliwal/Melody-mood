@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Switch, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Switch, Alert, ImageBackground } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
+import bgImage from '../assets/bg.jpg';
 
 const LoginScreen = ({ switchToSignup }) => {
   const { login } = useContext(AuthContext);
@@ -13,55 +14,65 @@ const LoginScreen = ({ switchToSignup }) => {
       Alert.alert('Missing Info', 'Please enter both email and password.');
       return;
     }
-
     login(email, password, rememberMe);
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <ImageBackground source={bgImage} style={styles.background} resizeMode="cover">
+      <View style={styles.overlay} />
+      <View style={styles.container}>
+        <Text style={styles.title}>Login</Text>
 
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        placeholderTextColor="#999"
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+        <TextInput
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          style={styles.input}
+          placeholderTextColor="#999"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
 
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-        placeholderTextColor="#999"
-        secureTextEntry
-      />
+        <TextInput
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          style={styles.input}
+          placeholderTextColor="#999"
+          secureTextEntry
+        />
 
-      <View style={styles.rememberContainer}>
-        <Text style={styles.rememberLabel}>Remember Me</Text>
-        <Switch value={rememberMe} onValueChange={setRememberMe} />
+        <View style={styles.rememberContainer}>
+          <Text style={styles.rememberLabel}>Remember Me</Text>
+          <Switch value={rememberMe} onValueChange={setRememberMe} />
+        </View>
+
+        <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
+          <Text style={styles.loginText}>Login</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={switchToSignup}>
+          <Text style={styles.switchText}>Don't have an account? Sign up</Text>
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
-        <Text style={styles.loginText}>Login</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={switchToSignup}>
-        <Text style={styles.switchText}>Don't have an account? Sign up</Text>
-      </TouchableOpacity>
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    
+  },
+   overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)', 
+  },
   container: {
     padding: 24,
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: '#121212',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   title: {
     fontSize: 28,

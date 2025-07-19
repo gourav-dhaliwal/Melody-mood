@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ImageBackground } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
+import bgImage from '../assets/bg.jpg';
 
 const SignupScreen = ({ switchToLogin }) => {
   const { signup } = useContext(AuthContext);
@@ -12,7 +13,6 @@ const SignupScreen = ({ switchToLogin }) => {
       Alert.alert('Error', 'Please enter both email and password');
       return;
     }
-
     const success = await signup(email, password);
     if (success) {
       Alert.alert('Signup Successful', 'Please login with your credentials');
@@ -21,44 +21,55 @@ const SignupScreen = ({ switchToLogin }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign Up</Text>
+   <ImageBackground source={bgImage} style={styles.background} resizeMode="cover">
+      <View style={styles.overlay} />
+      <View style={styles.container}>
+        <Text style={styles.title}>Sign Up</Text>
 
-      <TextInput
-        placeholder="Enter Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        placeholderTextColor="#999"
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        placeholder="Enter Password"
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-        placeholderTextColor="#999"
-        secureTextEntry
-      />
+        <TextInput
+          placeholder="Enter Email"
+          value={email}
+          onChangeText={setEmail}
+          style={styles.input}
+          placeholderTextColor="#999"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          placeholder="Enter Password"
+          value={password}
+          onChangeText={setPassword}
+          style={styles.input}
+          placeholderTextColor="#999"
+          secureTextEntry
+        />
 
-      <TouchableOpacity style={styles.signupBtn} onPress={handleSignup}>
-        <Text style={styles.signupText}>Sign Up</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.signupBtn} onPress={handleSignup}>
+          <Text style={styles.signupText}>Sign Up</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={switchToLogin}>
-        <Text style={styles.switchText}>Already have an account? Login</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity onPress={switchToLogin}>
+          <Text style={styles.switchText}>Already have an account? Login</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+
+  },
+
   container: {
     padding: 24,
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: '#121212',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)', 
   },
   title: {
     fontSize: 28,
