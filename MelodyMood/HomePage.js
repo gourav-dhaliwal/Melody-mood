@@ -1,4 +1,3 @@
-// your imports
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -6,10 +5,8 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
-  Image,
   StyleSheet,
   Modal,
-  Pressable,
   Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -21,6 +18,19 @@ import { ThemeContext } from './ThemeContext';
 import { searchArtist, searchTracks } from './utils/spotifyApi';
 import { useHistory } from './context/HistoryContext';
 
+const dailySongList = [
+  { id: '1', name: 'Blinding Lights', artist: 'The Weeknd', url: 'https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b' },
+  { id: '2', name: 'Shape of You', artist: 'Ed Sheeran', url: 'https://open.spotify.com/track/7qiZfU4dY1lWllzX7mPBI3' },
+  { id: '3', name: 'Levitating', artist: 'Dua Lipa', url: 'https://open.spotify.com/track/463CkQjx2Zk1yXoBuierM9' },
+  { id: '4', name: 'Stay', artist: 'The Kid LAROI & Justin Bieber', url: 'https://open.spotify.com/track/5HCyWlXZPP0y6Gqq8TgA20' },
+  { id: '5', name: 'Bad Habits', artist: 'Ed Sheeran', url: 'https://open.spotify.com/track/6PQ88X9TkUIAUIZJHW2upE' },
+  { id: '6', name: 'Watermelon Sugar', artist: 'Harry Styles', url: 'https://open.spotify.com/track/6UelLqGlWMcVH1E5c4H7lY' },
+  { id: '7', name: 'Sunflower', artist: 'Post Malone & Swae Lee', url: 'https://open.spotify.com/track/3KkXRkHbMCARz0aVfEt68P' },
+  { id: '8', name: 'Peaches', artist: 'Justin Bieber', url: 'https://open.spotify.com/track/4iJyoBOLtHqaGxP12qzhQI' },
+  { id: '9', name: 'Dance Monkey', artist: 'Tones and I', url: 'https://open.spotify.com/track/2XU0oxnq2qxCpomAAuJY8K' },
+  { id: '10', name: 'Someone You Loved', artist: 'Lewis Capaldi', url: 'https://open.spotify.com/track/7qEHsqek33rTcFNT9PFqLf' },
+];
+
 const HomePage = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -30,20 +40,31 @@ const HomePage = () => {
   const [followedArtists, setFollowedArtists] = useState([]);
   const [songHistory, setSongHistory] = useState([]);
 
+  // No dailySong in state initially
+  const [dailySong, setDailySong] = useState(null);
+  const [dailyModalVisible, setDailyModalVisible] = useState(false);
+
   const navigation = useNavigation();
   const { addNotification } = useContext(NotificationContext);
   const { addToHistory } = useHistory();
   const { themeName, theme, changeTheme } = useContext(ThemeContext);
 
   useEffect(() => {
-    const loadHistory = async () => {
+    const loadData = async () => {
       const search = await AsyncStorage.getItem('searchHistory');
       const songs = await AsyncStorage.getItem('songHistory');
       if (search) setSearchHistory(JSON.parse(search));
       if (songs) setSongHistory(JSON.parse(songs));
     };
-    loadHistory();
+    loadData();
   }, []);
+
+  // Pick a random song and open modal every time user clicks
+  const onDiscoverPress = () => {
+    const randomSong = dailySongList[Math.floor(Math.random() * dailySongList.length)];
+    setDailySong(randomSong);
+    setDailyModalVisible(true);
+  };
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -145,66 +166,30 @@ const HomePage = () => {
     );
   };
 
-  const renderMenu = () => (
-    <Modal
-      visible={mainMenuVisible}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setMainMenuVisible(false)}
-    >
-      <Pressable
-        style={styles.modalOverlay}
-        onPress={() => setMainMenuVisible(false)}
-      >
-        <View style={styles.smallSidebarMenu}>
-          {['Downloaded', 'LikedPlaylists', 'Notifications', 'History', 'Theme'].map((screen) => (
-            <TouchableOpacity
-              key={screen}
-              style={styles.modalOption}
-              onPress={() => {
-                if (screen === 'Theme') {
-                  setThemeModalVisible(true);
-                } else {
-                  navigation.navigate(screen);
-                }
-                setMainMenuVisible(false);
-              }}
-            >
-              <Text style={styles.modalText}>{screen.replace(/([A-Z])/g, ' $1')}</Text>
-            </TouchableOpacity>
-          ))}
+  const renderDailySongModal = () => (
+    <Modal visible={dailyModalVisible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.dailyModal}>
+          {dailySong && (
+            <>
+              <Text style={styles.dailyTitle}>{dailySong.name}</Text>
+              <Text style={styles.dailyArtist}>by {dailySong.artist}</Text>
+              <TouchableOpacity
+                style={styles.dailyPlayBtn}
+                onPress={() => Linking.openURL(dailySong.url)}
+              >
+                <Text style={styles.btnTextSmall}>Play on Spotify</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          <TouchableOpacity
+            style={[styles.dailyPlayBtn, { backgroundColor: '#ccc', marginTop: 10 }]}
+            onPress={() => setDailyModalVisible(false)}
+          >
+            <Text style={styles.btnTextSmall}>Close</Text>
+          </TouchableOpacity>
         </View>
-      </Pressable>
-    </Modal>
-  );
-
-  const renderThemeModal = () => (
-    <Modal
-      visible={themeModalVisible}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setThemeModalVisible(false)}
-    >
-      <Pressable
-        style={styles.modalOverlay}
-        onPress={() => setThemeModalVisible(false)}
-      >
-        <View style={styles.smallSidebarMenu}>
-          {['light', 'dark', 'colorful'].map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={styles.modalOption}
-              onPress={() => {
-                changeTheme(option);
-                setThemeModalVisible(false);
-                addNotification(`Theme changed to ${option}`);
-              }}
-            >
-              <Text style={styles.modalText}>{option.toUpperCase()}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </Pressable>
+      </View>
     </Modal>
   );
 
@@ -212,14 +197,20 @@ const HomePage = () => {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.header }]}>
         <Text style={[styles.headerTitle, { color: theme.headerText }]}>Melody Mood</Text>
-        <TouchableOpacity
-          style={styles.menuIcon}
-          onPress={() => setMainMenuVisible(true)}
-        >
+        <TouchableOpacity style={styles.menuIcon} onPress={() => setMainMenuVisible(true)}>
           <Ionicons name="ellipsis-vertical" size={24} color={theme.headerText} />
         </TouchableOpacity>
       </View>
 
+      {/* 🎵 Discover Random Song Button */}
+      <TouchableOpacity
+        style={[styles.dailyPlayBtn, { margin: 16 }]}
+        onPress={onDiscoverPress}
+      >
+        <Text style={styles.btnTextSmall}>🎵 Discover a New Song</Text>
+      </TouchableOpacity>
+
+      {/* Search Input */}
       <View style={styles.inputWrapper}>
         <TextInput
           placeholder="Search for an artist or song..."
@@ -237,10 +228,10 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Search History Section */}
+      {/* Search History */}
       {searchHistory.length > 0 && (
         <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Text style={{ color: theme.text, fontSize: 16, fontWeight: '600' }}>Search History</Text>
             <TouchableOpacity onPress={clearHistory}>
               <Text style={{ color: 'red' }}>Clear</Text>
@@ -273,8 +264,7 @@ const HomePage = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {renderMenu()}
-      {renderThemeModal()}
+      {renderDailySongModal()}
     </View>
   );
 };
@@ -294,7 +284,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
   headerTitle: { fontSize: 28, fontWeight: 'bold', letterSpacing: 0.5 },
-  menuIcon: { padding: 8, borderRadius: 20 },
   inputWrapper: {
     marginHorizontal: 16,
     marginTop: 16,
@@ -314,10 +303,6 @@ const styles = StyleSheet.create({
     right: 12,
     top: '50%',
     transform: [{ translateY: -10 }],
-    height: 20,
-    width: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   card: {
     flexDirection: 'row',
@@ -326,11 +311,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 8,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   image: { width: 50, height: 50, borderRadius: 25, marginRight: 12 },
   details: { flex: 1, justifyContent: 'center' },
@@ -354,30 +334,33 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   btnTextSmall: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  dailyPlayBtn: {
+    backgroundColor: '#1DB954',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignSelf: 'center',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
-    paddingTop: 100,
-    paddingRight: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  smallSidebarMenu: {
-    width: 220,
+  dailyModal: {
     backgroundColor: '#fff',
+    padding: 24,
     borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: '#e1e5e9',
+    width: 300,
+    alignItems: 'center',
   },
-  modalOption: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f8f9fa',
-    borderRadius: 8,
-    marginVertical: 2,
+  dailyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 4,
   },
-  modalText: { fontSize: 17, fontWeight: '600' },
+  dailyArtist: {
+    fontSize: 16,
+    marginBottom: 16,
+  },
 });
