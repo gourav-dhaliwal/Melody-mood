@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Linking, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DownloadContext } from './context/DownloadContext';
 import { ThemeContext } from './ThemeContext';
 
@@ -9,9 +10,30 @@ const formatDuration = (ms) => {
   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 };
 
-const SavedSongs = () => {
-  const { downloadedSongs } = useContext(DownloadContext);
+const DownloadedSongs = () => {
+  const { downloadedSongs, setDownloadedSongs } = useContext(DownloadContext);
   const { theme } = useContext(ThemeContext);
+
+  const clearAllDownloadedSongs = () => {
+    Alert.alert(
+      "Clear All",
+      "Are you sure you want to remove all downloaded songs?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes, Clear All",
+          onPress: async () => {
+            try {
+              setDownloadedSongs([]); // Clear context state
+              await AsyncStorage.removeItem('downloadedSongs'); // Clear AsyncStorage
+            } catch (err) {
+              console.error("Error clearing downloaded songs:", err);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const renderItem = ({ item }) => {
     if (!item) return null;
@@ -52,8 +74,16 @@ const SavedSongs = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {downloadedSongs.length > 0 && (
+        <TouchableOpacity style={styles.clearBtn} onPress={clearAllDownloadedSongs}>
+          <Text style={styles.clearBtnText}>Clear All Saved Songs</Text>
+        </TouchableOpacity>
+      )}
+
       {downloadedSongs.length === 0 ? (
-        <Text style={[styles.emptyText, { color: theme.background === '#222' ? '#eee' : theme.secondaryText }]}>No songs saved yet.</Text>
+        <Text style={[styles.emptyText, { color: theme.background === '#222' ? '#eee' : theme.secondaryText }]}>
+          No songs saved yet.
+        </Text>
       ) : (
         <FlatList
           data={downloadedSongs}
@@ -66,13 +96,25 @@ const SavedSongs = () => {
   );
 };
 
-export default SavedSongs;
+export default DownloadedSongs;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 20,
+  },
+  clearBtn: {
+    backgroundColor: '#d9534f',
+    paddingVertical: 12,
+    marginBottom: 12,
+    borderRadius: 12,
+  },
+  clearBtnText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+    textAlign: 'center',
   },
   card: {
     borderRadius: 16,

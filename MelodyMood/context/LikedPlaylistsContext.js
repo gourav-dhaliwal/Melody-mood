@@ -17,7 +17,7 @@ export const LikedPlaylistsProvider = ({ children }) => {
   };
 
   return (
-    <LikedPlaylistsContext.Provider value={{ likedPlaylists, toggleLike }}>
+    <LikedPlaylistsContext.Provider value={{ likedPlaylists, setLikedPlaylists, toggleLike }}>
       {children}
     </LikedPlaylistsContext.Provider>
   );

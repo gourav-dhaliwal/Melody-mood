@@ -457,6 +457,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',      // center modal horizontally
     padding: 20,
   },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 60, // adjust depending on your header
+    right: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  
   smallSidebarMenu: {
     width: 220,
     backgroundColor: '#fff',

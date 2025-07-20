@@ -49,6 +49,20 @@ const HomeStack = () => (
     <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: 'Notifications' }} />
     <Stack.Screen name="History" component={HistoryScreen} options={{ headerTitle: 'Listening History' }} />
     <Stack.Screen name="Change Theme" component={ThemeContext} options={{ headerTitle: 'Theme' }} />
+    {/* 
+      Moved TrackList here as well, so accessible from HomeStack if needed 
+      (optional, but useful if you want to navigate by name globally)
+    */}
+    <Stack.Screen
+      name="TrackList"
+      component={TrackListScreen}
+      options={{
+        headerTitle: 'Tracks',
+        headerStyle: { backgroundColor: '#1DB954' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+      }}
+    />
   </Stack.Navigator>
 );
 
@@ -127,8 +141,8 @@ const MainApp = () => {
   return user
     ? <AppNavigator />
     : showLogin
-    ? <LoginScreen switchToSignup={() => setShowLogin(false)} />
-    : <SignupScreen switchToLogin={() => setShowLogin(true)} setShowLogin={setShowLogin} />;
+      ? <LoginScreen switchToSignup={() => setShowLogin(false)} />
+      : <SignupScreen switchToLogin={() => setShowLogin(true)} setShowLogin={setShowLogin} />;
 };
 
 const RootNavigator = () => {
