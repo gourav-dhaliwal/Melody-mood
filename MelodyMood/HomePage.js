@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-Modal,
+  Modal,
   Pressable,
   Linking,
 } from 'react-native';
@@ -321,7 +321,7 @@ const HomePage = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {/* Discover New Song Button - kept in original place */}
+      {/* Discover New Song Button */}
       <View style={{ margin: 16 }}>
         <TouchableOpacity
           style={[styles.smallBtn, { backgroundColor: '#1DB954', minWidth: 200, alignSelf: 'center' }]}
@@ -333,7 +333,19 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Daily Song Modal - no image, centered text */}
+      {/* 🚀 NEW: About & Feedback Button */}
+      <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+        <TouchableOpacity
+          style={[styles.smallBtn, { backgroundColor: '#007AFF', minWidth: 200, alignSelf: 'center' }]}
+          onPress={() => navigation.navigate('About & Feedback')}
+        >
+          <Text style={[styles.btnTextSmall, { fontSize: 16 }]}>
+            About & Feedback
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Daily Song Modal */}
       <Modal
         visible={dailySongModalVisible}
         transparent
@@ -453,8 +465,8 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',  // center modal vertically
-    alignItems: 'center',      // center modal horizontally
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
   dropdownMenu: {

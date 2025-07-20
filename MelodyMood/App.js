@@ -12,6 +12,8 @@ import { LikedPlaylistsProvider } from './context/LikedPlaylistsContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { HistoryProvider } from './context/HistoryContext';
+import AboutAndFeedback from './AboutAndFeedback'; 
+
 
 // Screens
 import SignupScreen from './screens/SignupScreen';
@@ -49,6 +51,7 @@ const HomeStack = () => (
     <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: 'Notifications' }} />
     <Stack.Screen name="History" component={HistoryScreen} options={{ headerTitle: 'Listening History' }} />
     <Stack.Screen name="Change Theme" component={ThemeContext} options={{ headerTitle: 'Theme' }} />
+<<<<<<< HEAD
     {/* 
       Moved TrackList here as well, so accessible from HomeStack if needed 
       (optional, but useful if you want to navigate by name globally)
@@ -63,6 +66,10 @@ const HomeStack = () => (
         headerTitleStyle: { fontWeight: 'bold' },
       }}
     />
+=======
+    <Stack.Screen name="About & Feedback" component={AboutAndFeedback} options={{ headerTitle: 'About & Feedback' }} />
+
+>>>>>>> 70fddf5a24b3561051a5d9465b630654ec373c81
   </Stack.Navigator>
 );
 
