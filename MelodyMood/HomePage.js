@@ -1,4 +1,3 @@
-// your imports
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -21,7 +20,6 @@ import { ThemeContext } from './ThemeContext';
 import { searchArtist, searchTracks } from './utils/spotifyApi';
 import { useHistory } from './context/HistoryContext';
 
-// Daily songs list for "Discover a new song"
 const dailySongsList = [
   {
     id: '1',
@@ -41,7 +39,6 @@ const dailySongsList = [
     artist: 'Dua Lipa',
     url: 'https://open.spotify.com/track/463CkQjx2Zk1yXoBuierM9',
   },
-  // Add more if you want
 ];
 
 const HomePage = () => {
@@ -52,10 +49,9 @@ const HomePage = () => {
   const [themeModalVisible, setThemeModalVisible] = useState(false);
   const [followedArtists, setFollowedArtists] = useState([]);
   const [songHistory, setSongHistory] = useState([]);
-
-  // New states for daily song modal
   const [dailySongModalVisible, setDailySongModalVisible] = useState(false);
   const [dailySong, setDailySong] = useState(null);
+  const [quote, setQuote] = useState('');
 
   const navigation = useNavigation();
   const { addNotification } = useContext(NotificationContext);
@@ -73,7 +69,6 @@ const HomePage = () => {
     loadDailySong();
   }, []);
 
-  // Load or pick daily song only once per day
   const loadDailySong = async () => {
     try {
       const savedSongJSON = await AsyncStorage.getItem('dailySong');
@@ -133,6 +128,19 @@ const HomePage = () => {
     });
   };
 
+  const fetchQuote = async () => {
+    try {
+      const res = await fetch('https://zenquotes.io/api/random');
+      const data = await res.json();
+      if (data && data[0]) {
+        setQuote(`${data[0].q} — ${data[0].a}`);
+      }
+    } catch (err) {
+      console.error(err);
+      setQuote("Couldn’t fetch quote, try again!");
+    }
+  };
+
   const renderItem = ({ item }) => {
     const isArtist = item.type === 'artist';
     const imageUrl =
@@ -172,21 +180,21 @@ const HomePage = () => {
         {isArtist ? (
           <TouchableOpacity
             style={[
-              styles.smallBtn,
-              followedArtists.includes(item.id) ? styles.unfollowBtn : styles.followBtn,
+              styles.button,
+              { backgroundColor: followedArtists.includes(item.id) ? '#d9534f' : '#1DB954' },
             ]}
             onPress={() => toggleFollow(item.id, item.name)}
           >
-            <Text style={styles.btnTextSmall}>
+            <Text style={styles.buttonText}>
               {followedArtists.includes(item.id) ? 'Unfollow' : 'Follow'}
             </Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            style={[styles.smallBtn, styles.playBtn]}
+            style={[styles.button, { backgroundColor: '#1DB954', minWidth: 60 }]}
             onPress={handlePlay}
           >
-            <Text style={styles.btnTextSmall}>▶️</Text>
+            <Text style={styles.buttonText}>▶️ Play</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -268,6 +276,29 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
+      <View style={{ padding: 16, alignItems: 'center' }}>
+        <TouchableOpacity
+          onPress={fetchQuote}
+          style={{
+            backgroundColor: '#1DB954',
+            paddingHorizontal: 20,
+            paddingVertical: 8,
+            borderRadius: 20,
+            marginBottom: 10,
+          }}
+        >
+          <Text style={{ color: 'white', fontWeight: 'bold' }}>Show Quote</Text>
+        </TouchableOpacity>
+
+        {quote !== '' && (
+          <View style={{ marginTop: 8, paddingHorizontal: 12 }}>
+            <Text style={{ textAlign: 'center', fontStyle: 'italic', color: theme.text }}>
+              {quote}
+            </Text>
+          </View>
+        )}
+      </View>
+
       <View style={styles.inputWrapper}>
         <TextInput
           placeholder="Search for an artist or song..."
@@ -285,7 +316,6 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Search History Section */}
       {searchHistory.length > 0 && (
         <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -321,31 +351,28 @@ const HomePage = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {/* Discover New Song Button */}
       <View style={{ margin: 16 }}>
         <TouchableOpacity
-          style={[styles.smallBtn, { backgroundColor: '#1DB954', minWidth: 200, alignSelf: 'center' }]}
+          style={[styles.bigButton, { backgroundColor: '#1DB954' }]}
           onPress={() => setDailySongModalVisible(true)}
         >
-          <Text style={[styles.btnTextSmall, { fontSize: 16 }]}>
+          <Text style={styles.bigButtonText}>
             Discover a New Song
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* 🚀 NEW: About & Feedback Button */}
       <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
         <TouchableOpacity
-          style={[styles.smallBtn, { backgroundColor: '#007AFF', minWidth: 200, alignSelf: 'center' }]}
+          style={[styles.bigButton, { backgroundColor: '#007AFF' }]}
           onPress={() => navigation.navigate('About & Feedback')}
         >
-          <Text style={[styles.btnTextSmall, { fontSize: 16 }]}>
+          <Text style={styles.bigButtonText}>
             About & Feedback
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Daily Song Modal */}
       <Modal
         visible={dailySongModalVisible}
         transparent
@@ -366,12 +393,12 @@ const HomePage = () => {
                   by {dailySong.artist}
                 </Text>
                 <TouchableOpacity
-                  style={[styles.smallBtn, { backgroundColor: '#1DB954', marginTop: 20 }]}
+                  style={[styles.bigButton, { backgroundColor: '#1DB954', marginTop: 20 }]}
                   onPress={() => {
                     if (dailySong.url) Linking.openURL(dailySong.url);
                   }}
                 >
-                  <Text style={styles.btnTextSmall}>Play on Spotify</Text>
+                  <Text style={styles.bigButtonText}>Play on Spotify</Text>
                 </TouchableOpacity>
               </>
             ) : (
@@ -444,24 +471,33 @@ const styles = StyleSheet.create({
   details: { flex: 1, justifyContent: 'center' },
   name: { fontSize: 16, fontWeight: 'bold' },
   subText: { fontSize: 13 },
-  smallBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minWidth: 70,
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 15,
     marginLeft: 8,
+    minWidth: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  followBtn: { backgroundColor: '#1DB954' },
-  unfollowBtn: { backgroundColor: '#d9534f' },
-  playBtn: {
-    backgroundColor: '#1DB954',
-    minWidth: 40,
-    paddingHorizontal: 10,
-    borderRadius: 20,
+  buttonText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 14,
   },
-  btnTextSmall: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  bigButton: {
+    paddingVertical: 14,
+    borderRadius: 15,
+    alignItems: 'center',
+    minWidth: 220,
+    alignSelf: 'center',
+    marginVertical: 8,
+  },
+  bigButtonText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 16,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -469,21 +505,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 60, // adjust depending on your header
-    right: 10,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  
   smallSidebarMenu: {
     width: 220,
     backgroundColor: '#fff',
@@ -504,7 +525,6 @@ const styles = StyleSheet.create({
   modalText: { fontSize: 17, fontWeight: '600' },
   dailySongModal: {
     width: 280,
-    backgroundColor: '#fff',
     borderRadius: 16,
     paddingVertical: 24,
     paddingHorizontal: 20,
@@ -516,9 +536,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   dailySongArtist: {
-    fontSize: 16,
+    fontSize: 18,
     marginTop: 4,
     fontStyle: 'italic',
-    textAlign: 'center',
   },
 });
