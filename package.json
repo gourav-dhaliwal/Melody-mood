@@ -2,6 +2,7 @@
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "axios": "^1.10.0",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "expo-linear-gradient": "~14.1.5"
   }
 }

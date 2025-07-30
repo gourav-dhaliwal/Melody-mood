@@ -1,43 +1,73 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const OnboardingScreen1 = ({ navigation }) => {
   return (
-    <View style={styles.container}>
-      <Image
-        source={require('../assets/mood.jpg')}
-        style={styles.image}
-        resizeMode="cover"
-      />
-      <Text style={styles.title}>Detect Your Mood</Text>
-      <Text style={styles.description}>
-        Melody Mood detects your emotions and suggests music accordingly.
-      </Text>
+    <ImageBackground
+      source={require('../assets/mood.jpg')} // full screen background image
+      style={styles.background}
+      resizeMode="cover"
+    >
+      {/* Dark overlay */}
+      <View style={styles.overlay} />
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.nextButton}
-          onPress={() => navigation.navigate('Onboarding2')}
-        >
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.skipButton}
-          onPress={() => navigation.replace('MainApp')}
-        >
-          <Text style={styles.buttonText}>Skip</Text>
-        </TouchableOpacity>
+      <View style={styles.content}>
+        <Image
+          source={require('../assets/mood.jpg')} // smaller preview image on top
+          style={styles.image}
+          resizeMode="cover"
+        />
+
+        <Text style={styles.title}>Detect Your Mood</Text>
+        <Text style={styles.description}>
+          Melody Mood detects your emotions and suggests music accordingly.
+        </Text>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.nextButton}
+            onPress={() => navigation.navigate('Onboarding2')}
+          >
+            <Text style={styles.buttonText}>
+              Next <Ionicons name="arrow-forward" size={18} color="#fff" />
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={() => navigation.replace('MainApp')}
+          >
+            <Text style={styles.buttonText}>Skip</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
 export default OnboardingScreen1;
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    backgroundColor: '#fff',
+    width: '100%',   // full width and height for background image
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)', // dark transparent overlay
+  },
+  content: {
     paddingHorizontal: 30,
     justifyContent: 'center',
     alignItems: 'center',
@@ -62,7 +92,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    color: '#555',
+    color: '#fff',  // white text for better contrast on dark overlay
     textAlign: 'center',
     paddingHorizontal: 10,
     marginBottom: 40,
@@ -77,17 +107,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 25,
     elevation: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   skipButton: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#555',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 25,
     elevation: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonText: {
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
