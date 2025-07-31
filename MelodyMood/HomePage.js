@@ -49,9 +49,6 @@ const HomePage = () => {
   const [themeModalVisible, setThemeModalVisible] = useState(false);
   const [followedArtists, setFollowedArtists] = useState([]);
   const [songHistory, setSongHistory] = useState([]);
-  const [dailySongModalVisible, setDailySongModalVisible] = useState(false);
-  const [dailySong, setDailySong] = useState(null);
-  const [quote, setQuote] = useState('');
 
   const navigation = useNavigation();
   const { addNotification } = useContext(NotificationContext);
@@ -66,27 +63,7 @@ const HomePage = () => {
       if (songs) setSongHistory(JSON.parse(songs));
     };
     loadHistory();
-    loadDailySong();
   }, []);
-
-  const loadDailySong = async () => {
-    try {
-      const savedSongJSON = await AsyncStorage.getItem('dailySong');
-      const savedDate = await AsyncStorage.getItem('dailySongDate');
-      const today = new Date().toDateString();
-
-      if (savedSongJSON && savedDate === today) {
-        setDailySong(JSON.parse(savedSongJSON));
-      } else {
-        const randomSong = dailySongsList[Math.floor(Math.random() * dailySongsList.length)];
-        setDailySong(randomSong);
-        await AsyncStorage.setItem('dailySong', JSON.stringify(randomSong));
-        await AsyncStorage.setItem('dailySongDate', today);
-      }
-    } catch (error) {
-      console.error('Failed to load daily song:', error);
-    }
-  };
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -126,19 +103,6 @@ const HomePage = () => {
 
       return updatedList;
     });
-  };
-
-  const fetchQuote = async () => {
-    try {
-      const res = await fetch('https://zenquotes.io/api/random');
-      const data = await res.json();
-      if (data && data[0]) {
-        setQuote(`${data[0].q} — ${data[0].a}`);
-      }
-    } catch (err) {
-      console.error(err);
-      setQuote("Couldn’t fetch quote, try again!");
-    }
   };
 
   const renderItem = ({ item }) => {
@@ -276,29 +240,6 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={{ padding: 16, alignItems: 'center' }}>
-        <TouchableOpacity
-          onPress={fetchQuote}
-          style={{
-            backgroundColor: '#1DB954',
-            paddingHorizontal: 20,
-            paddingVertical: 8,
-            borderRadius: 20,
-            marginBottom: 10,
-          }}
-        >
-          <Text style={{ color: 'white', fontWeight: 'bold' }}>Show Quote</Text>
-        </TouchableOpacity>
-
-        {quote !== '' && (
-          <View style={{ marginTop: 8, paddingHorizontal: 12 }}>
-            <Text style={{ textAlign: 'center', fontStyle: 'italic', color: theme.text }}>
-              {quote}
-            </Text>
-          </View>
-        )}
-      </View>
-
       <View style={styles.inputWrapper}>
         <TextInput
           placeholder="Search for an artist or song..."
@@ -350,63 +291,6 @@ const HomePage = () => {
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 100 }}
       />
-
-      <View style={{ margin: 16 }}>
-        <TouchableOpacity
-          style={[styles.bigButton, { backgroundColor: '#1DB954' }]}
-          onPress={() => setDailySongModalVisible(true)}
-        >
-          <Text style={styles.bigButtonText}>
-            Discover a New Song
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-        <TouchableOpacity
-          style={[styles.bigButton, { backgroundColor: '#007AFF' }]}
-          onPress={() => navigation.navigate('About & Feedback')}
-        >
-          <Text style={styles.bigButtonText}>
-            About & Feedback
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <Modal
-        visible={dailySongModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDailySongModalVisible(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setDailySongModalVisible(false)}
-        >
-          <View style={[styles.dailySongModal, { backgroundColor: theme.card }]}>
-            {dailySong ? (
-              <>
-                <Text style={[styles.dailySongTitle, { color: theme.text }]}>
-                  {dailySong.name}
-                </Text>
-                <Text style={[styles.dailySongArtist, { color: theme.text }]}>
-                  by {dailySong.artist}
-                </Text>
-                <TouchableOpacity
-                  style={[styles.bigButton, { backgroundColor: '#1DB954', marginTop: 20 }]}
-                  onPress={() => {
-                    if (dailySong.url) Linking.openURL(dailySong.url);
-                  }}
-                >
-                  <Text style={styles.bigButtonText}>Play on Spotify</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <Text style={[styles.dailySongTitle, { color: theme.text }]}>No song available</Text>
-            )}
-          </View>
-        </Pressable>
-      </Modal>
 
       {renderMenu()}
       {renderThemeModal()}
@@ -523,21 +407,4 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   modalText: { fontSize: 17, fontWeight: '600' },
-  dailySongModal: {
-    width: 280,
-    borderRadius: 16,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  dailySongTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  dailySongArtist: {
-    fontSize: 18,
-    marginTop: 4,
-    fontStyle: 'italic',
-  },
 });

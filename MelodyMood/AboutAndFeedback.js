@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Alert, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
-const AboutAndFeedback = () => {
+const AboutAndFeedback = ({ route }) => {
+  // Read initialTab param from route.params or default to 'about'
+  const initialTab = route?.params?.initialTab || 'about';
+
+  // Set activeTab state initialized with initialTab param
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [feedback, setFeedback] = useState('');
-  const [activeTab, setActiveTab] = useState('about'); // 'about' or 'feedback'
+
+  // Optional: if route params might change (usually they don't), sync state with param
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const handleSubmit = () => {
     if (feedback.trim() === '') {

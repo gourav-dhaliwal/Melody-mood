@@ -12,10 +12,11 @@ import { LikedPlaylistsProvider } from './context/LikedPlaylistsContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { HistoryProvider } from './context/HistoryContext';
-import AboutAndFeedback from './AboutAndFeedback'; 
-
+import { ThemeProvider } from './ThemeContext';
+import { ThemeContext } from './ThemeContext';
 
 // Screens
+import AboutAndFeedback from './AboutAndFeedback';
 import SignupScreen from './screens/SignupScreen';
 import LoginScreen from './screens/LoginScreen';
 import HomePage from './HomePage';
@@ -30,8 +31,6 @@ import Notifications from './Notifications';
 import HistoryScreen from './screens/HistoryScreen';
 import ProfileScreen from './ProfileScreen';
 import NotificationBanner from './NotificationBanner';
-import { ThemeProvider } from './ThemeContext';
-import { ThemeContext } from './ThemeContext';
 
 // Onboarding Screens
 import OnboardingScreen1 from './screens/OnboardingScreen1';
@@ -42,6 +41,7 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 const RootStack = createStackNavigator();
 
+// Home stack WITHOUT AboutAndFeedback (moved to RootStack)
 const HomeStack = () => (
   <Stack.Navigator initialRouteName="HomePage">
     <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
@@ -51,12 +51,10 @@ const HomeStack = () => (
     <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: 'Notifications' }} />
     <Stack.Screen name="History" component={HistoryScreen} options={{ headerTitle: 'Listening History' }} />
     <Stack.Screen name="Change Theme" component={ThemeContext} options={{ headerTitle: 'Theme' }} />
-
-    <Stack.Screen name="About & Feedback" component={AboutAndFeedback} options={{ headerTitle: 'About & Feedback' }} />
-
   </Stack.Navigator>
 );
 
+// Playlists stack
 const PlaylistsStack = () => (
   <Stack.Navigator initialRouteName="PlaylistsList">
     <Stack.Screen name="PlaylistsList" component={Playlists} options={{ headerShown: false }} />
@@ -72,6 +70,15 @@ const PlaylistsStack = () => (
     />
   </Stack.Navigator>
 );
+
+
+const ProfileStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
+  </Stack.Navigator>
+);
+
+
 
 const AppNavigator = () => (
   <Tab.Navigator
@@ -96,9 +103,11 @@ const AppNavigator = () => (
     <Tab.Screen name="Mood Selector" component={MoodSelector} />
     <Tab.Screen name="Mood journal" component={MoodJournal} />
     <Tab.Screen name="Playlists" component={PlaylistsStack} />
-    <Tab.Screen name="Profile" component={ProfileScreen} />
+  <Tab.Screen name="Profile" component={ProfileStack} />
+
   </Tab.Navigator>
 );
+
 
 const MainApp = () => {
   const { user } = useContext(AuthContext);
@@ -136,6 +145,7 @@ const MainApp = () => {
       : <SignupScreen switchToLogin={() => setShowLogin(true)} setShowLogin={setShowLogin} />;
 };
 
+
 const RootNavigator = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
@@ -167,9 +177,15 @@ const RootNavigator = () => {
         </>
       ) : null}
       <RootStack.Screen name="MainApp" component={MainApp} />
+      <RootStack.Screen
+        name="AboutAndFeedback"
+        component={AboutAndFeedback}
+        options={{ headerShown: true, headerTitle: 'About & Feedback' }}
+      />
     </RootStack.Navigator>
   );
 };
+
 
 const App = () => (
   <AuthProvider>
