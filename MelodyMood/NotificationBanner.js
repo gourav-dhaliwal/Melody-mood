@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, StyleSheet, TouchableOpacity } from 'react-native';
 import { NotificationContext } from './context/NotificationContext';
 
@@ -6,23 +6,20 @@ const NotificationBanner = () => {
   const { notifications } = useContext(NotificationContext);
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
-  const [fadeAnim] = useState(new Animated.Value(0));
+  const fadeAnim = useRef(new Animated.Value(0)).current; // ✅ FIX HERE
 
   useEffect(() => {
     if (notifications.length > 0) {
-      // Show newest notification
       const latest = notifications[0];
       setMessage(latest.message);
       setVisible(true);
 
-      // Fade in
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 300,
         useNativeDriver: true,
       }).start();
 
-      // Hide after 3 seconds
       const timer = setTimeout(() => {
         Animated.timing(fadeAnim, {
           toValue: 0,

@@ -47,9 +47,11 @@ export default function HistoryScreen({ navigation }) {
                 borderLeftColor: item.type === 'song' ? '#FF9F43' : '#4BC0C8'
               }
             ]}
-            onPress={() => navigation.navigate('TrackList', {
-              playlistId: item.id,
-              playlistName: item.name
+            onPress={() => navigation.navigate('Playlists', {
+  screen: 'TrackList',
+  params: {
+    playlistId: item.id,
+    playlistName: item.name,}
             })}
           >
             <Ionicons

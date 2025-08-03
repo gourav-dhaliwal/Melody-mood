@@ -33,9 +33,11 @@ const LikedPlaylistsScreen = ({ navigation }) => {
     <TouchableOpacity
       style={[styles.card, { backgroundColor: theme.card, borderColor: theme.text + '20' }]}
       onPress={() =>
-        navigation.navigate('TrackList', {
-          playlistId: item.id,
-          playlistName: item.name,
+    navigation.navigate('Playlists', {
+  screen: 'TrackList',
+  params: {
+    playlistId: item.id,
+    playlistName: item.name,}
         })
       }
     >
