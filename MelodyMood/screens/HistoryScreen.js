@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useHistory } from '../context/HistoryContext';
 import { ThemeContext } from '../ThemeContext';
@@ -17,10 +17,37 @@ export default function HistoryScreen({ navigation }) {
         {
           text: 'Clear',
           style: 'destructive',
-          onPress: () => clearHistory()
-        }
+          onPress: () => clearHistory(),
+        },
       ]
     );
+  };
+
+  const handlePress = async (item) => {
+    if (item.type === 'playlist') {
+      navigation.navigate('Playlists', {
+        screen: 'TrackList',
+        params: {
+          playlistId: item.id,
+          playlistName: item.name,
+        },
+      });
+    } else if (item.type === 'song') {
+      if (item.spotifyUrl) {
+        try {
+          const supported = await Linking.canOpenURL(item.spotifyUrl);
+          if (supported) {
+            Linking.openURL(item.spotifyUrl);
+          } else {
+            Alert.alert('Error', 'Cannot open the Spotify link.');
+          }
+        } catch (error) {
+          Alert.alert('Error', 'Failed to open the Spotify link.');
+        }
+      } else {
+        Alert.alert('No URL', 'No Spotify URL available for this song.');
+      }
+    }
   };
 
   return (
@@ -44,15 +71,10 @@ export default function HistoryScreen({ navigation }) {
               {
                 backgroundColor: theme.card,
                 borderLeftWidth: 4,
-                borderLeftColor: item.type === 'song' ? '#FF9F43' : '#4BC0C8'
-              }
+                borderLeftColor: item.type === 'song' ? '#FF9F43' : '#4BC0C8',
+              },
             ]}
-            onPress={() => navigation.navigate('Playlists', {
-  screen: 'TrackList',
-  params: {
-    playlistId: item.id,
-    playlistName: item.name,}
-            })}
+            onPress={() => handlePress(item)}
           >
             <Ionicons
               name={item.type === 'song' ? 'musical-notes' : 'list'}
@@ -61,14 +83,18 @@ export default function HistoryScreen({ navigation }) {
               style={styles.icon}
             />
             <View style={styles.textContainer}>
-              <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
+              <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>
+                {item.name}
+              </Text>
               <View style={styles.details}>
-                <Text style={[styles.detailText, { color: theme.text }]}>{item.type === 'song' ? 'Song' : 'Playlist'}</Text>
+                <Text style={[styles.detailText, { color: theme.text }]}>
+                  {item.type === 'song' ? 'Song' : 'Playlist'}
+                </Text>
                 <Text style={[styles.dot, { color: theme.text }]}> • </Text>
                 <Text style={[styles.detailText, { color: theme.text }]}>
                   {new Date(item.timestamp).toLocaleTimeString([], {
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
                   })}
                 </Text>
               </View>
@@ -92,13 +118,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 20
+    paddingTop: 20,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
-    marginLeft: 8
+    marginLeft: 8,
   },
   item: {
     flexDirection: 'row',
@@ -111,39 +137,39 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
-    marginBottom: 8
+    marginBottom: 8,
   },
   icon: {
-    marginRight: 12
+    marginRight: 12,
   },
   textContainer: {
-    flex: 1
+    flex: 1,
   },
   name: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4
+    marginBottom: 4,
   },
   details: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   detailText: {
-    fontSize: 13
+    fontSize: 13,
   },
   dot: {
     fontSize: 13,
-    marginHorizontal: 4
+    marginHorizontal: 4,
   },
   divider: {
     height: 1,
-    marginVertical: 8
+    marginVertical: 8,
   },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40
+    padding: 40,
   },
   headerRow: {
     flexDirection: 'row',
@@ -151,10 +177,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
     marginLeft: 8,
-    marginRight: 8
+    marginRight: 8,
   },
   emptyText: {
     fontSize: 16,
-    marginTop: 16
-  }
+    marginTop: 16,
+  },
 });

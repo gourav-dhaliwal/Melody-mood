@@ -65,6 +65,7 @@ const TrackListScreen = ({ route, navigation }) => {
       name: track.name,
       type: 'song',
       artist: track.artists?.[0]?.name,
+       spotifyUrl: track.external_urls?.spotify, 
       image: track.album?.images?.[0]?.url,
     });
 
