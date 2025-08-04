@@ -189,7 +189,8 @@ const ProfileScreen = () => {
           <View style={[styles.header, themed.card]}>
             <View style={styles.headerTop}>
               <Ionicons name="person-circle-outline" size={28} color={theme.text} style={{ marginRight: 8 }} />
-              <Text style={[styles.userText, themed.text]}>guri@gmail.com</Text>
+              <Text style={[styles.userText, themed.text]}>{user?.email}</Text>
+
             </View>
           </View>
 
