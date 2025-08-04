@@ -27,6 +27,8 @@ import { useNavigation } from '@react-navigation/native';
 global.Buffer = Buffer;
 
 const { width } = Dimensions.get('window');
+const { user, logout } = useContext(AuthContext);
+
 
 const dailySongsList = [
   { id: '1', name: 'Shape of You', artist: 'Ed Sheeran', url: 'https://open.spotify.com/track/7qiZfU4dY1lWllzX7mPBI3' },
@@ -186,11 +188,14 @@ const ProfileScreen = () => {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
           <View style={[styles.header, themed.card]}>
-            <View style={styles.headerTop}>
-              <Ionicons name="person-circle-outline" size={28} color={theme.text} style={{ marginRight: 8 }} />
-              <Text style={[styles.userText, themed.text]}>guri@gmail.com</Text>
-            </View>
-          </View>
+  <View style={styles.headerTop}>
+    <Ionicons name="person-circle-outline" size={28} color={theme.text} style={{ marginRight: 8 }} />
+    <Text style={[styles.userText, themed.text]}>
+      {user?.email || 'Guest'}
+    </Text>
+  </View>
+</View>
+
 
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.actionBtn} onPress={fetchQuote}>
